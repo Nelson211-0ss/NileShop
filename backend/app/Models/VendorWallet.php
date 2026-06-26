@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class VendorWallet extends Model
+{
+    protected $fillable = ['vendor_id', 'balance', 'pending_balance', 'currency'];
+
+    protected function casts(): array
+    {
+        return [
+            'balance' => 'decimal:2',
+            'pending_balance' => 'decimal:2',
+        ];
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+}

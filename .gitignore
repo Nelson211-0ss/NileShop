@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build
+dist/
+build/
+*.local
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+backend/storage/*.key
+backend/public/hot
+backend/public/storage
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+!backend/storage/logs/.gitkeep
+!backend/storage/framework/cache/.gitkeep
+!backend/storage/framework/sessions/.gitkeep
+!backend/storage/framework/views/.gitkeep
+
+# Database
+*.sqlite
+*.sqlite-journal
+
+# Testing
+coverage/
+.phpunit.result.cache
+
+# Docker
+docker/data/
+
+# Misc
+*.log
+npm-debug.log*
+
+# Expo
+.expo/
