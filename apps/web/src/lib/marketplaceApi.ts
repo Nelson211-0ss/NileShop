@@ -124,3 +124,30 @@ export const couponApi = {
   validate: (code: string, subtotal: number) =>
     api.post<ApiResponse<{ code: string; discount: number }>>('/coupons/validate', { code, subtotal }).then((r) => r.data),
 };
+
+export const conversationApi = {
+  list: (perspective: 'customer' | 'vendor' = 'customer') =>
+    api
+      .get<ApiResponse<import('@nileshop/types').Conversation[]>>('/conversations', {
+        params: { perspective },
+      })
+      .then((r) => r.data),
+  /** Vendor inbox — uses vendor-scoped endpoint */
+  vendorList: () =>
+    api
+      .get<ApiResponse<import('@nileshop/types').Conversation[]>>('/vendor/conversations')
+      .then((r) => r.data),
+  unreadCount: (perspective: 'customer' | 'vendor' = 'customer') =>
+    api
+      .get<ApiResponse<{ count: number }>>('/conversations/unread-count', { params: { perspective } })
+      .then((r) => r.data),
+  start: (data: { vendor_id: number; product_id?: number }) =>
+    api.post<ApiResponse<import('@nileshop/types').Conversation>>('/conversations', data).then((r) => r.data),
+  get: (id: number) =>
+    api.get<ApiResponse<import('@nileshop/types').Conversation>>(`/conversations/${id}`).then((r) => r.data),
+  send: (id: number, body: string) =>
+    api
+      .post<ApiResponse<import('@nileshop/types').ChatMessage>>(`/conversations/${id}/messages`, { body })
+      .then((r) => r.data),
+  markRead: (id: number) => api.post(`/conversations/${id}/read`),
+};

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\Delivery\RiderDeliveryController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
+use App\Http\Controllers\Api\V1\ConversationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('cart')->name('cart.')->group(function (): void {
@@ -57,10 +58,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::post('coupons/validate', [CouponController::class, 'validate'])->name('coupons.validate');
 
+    Route::prefix('conversations')->name('conversations.')->group(function (): void {
+        Route::get('/', [ConversationController::class, 'index'])->name('index');
+        Route::get('unread-count', [ConversationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/', [ConversationController::class, 'store'])->name('store');
+        Route::get('{conversation}', [ConversationController::class, 'show'])->name('show');
+        Route::post('{conversation}/messages', [ConversationController::class, 'sendMessage'])->name('messages.store');
+        Route::post('{conversation}/read', [ConversationController::class, 'markRead'])->name('read');
+    });
+
     Route::middleware('vendor')->prefix('vendor')->name('vendor.')->group(function (): void {
         Route::get('store', [VendorController::class, 'myStore'])->name('store');
         Route::put('store', [VendorController::class, 'updateStore'])->name('store.update');
         Route::get('orders', [VendorController::class, 'orders'])->name('orders');
+        Route::get('conversations', [ConversationController::class, 'vendorIndex'])->name('conversations.index');
         Route::apiResource('products', VendorProductController::class);
         Route::post('products/{product}/images', [VendorProductController::class, 'addImages'])->name('products.images');
     });

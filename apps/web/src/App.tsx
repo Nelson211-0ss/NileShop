@@ -28,6 +28,8 @@ import { VendorProductFormPage } from '@/features/vendor/pages/VendorProductForm
 import { VendorProductEditPage } from '@/features/vendor/pages/VendorProductEditPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage';
+import { MessagesPage } from '@/features/messages/pages/MessagesPage';
+import { VendorMessagesPage } from '@/features/vendor/pages/VendorMessagesPage';
 import { RiderDashboardPage } from '@/features/rider/pages/RiderDashboardPage';
 
 const queryClient = new QueryClient({
@@ -60,10 +62,14 @@ export function App() {
                   <Route path="/addresses" element={<AddressesPage />} />
                   <Route path="/wishlist" element={<WishlistPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/messages/:id" element={<MessagesPage />} />
                 </Route>
 
-                <Route element={<RoleRoute roles={['vendor']}><VendorDashboardLayout /></RoleRoute>}>
+                <Route element={<ProtectedRoute><RoleRoute roles={['vendor']}><VendorDashboardLayout /></RoleRoute></ProtectedRoute>}>
                   <Route path="/vendor" element={<VendorDashboardPage />} />
+                  <Route path="/vendor/messages" element={<VendorMessagesPage />} />
+                  <Route path="/vendor/messages/:id" element={<VendorMessagesPage />} />
                   <Route path="/vendor/products/new" element={<VendorProductFormPage />} />
                   <Route path="/vendor/products/:id/edit" element={<VendorProductEditPage />} />
                 </Route>

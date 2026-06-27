@@ -23,6 +23,8 @@ class VendorResource extends JsonResource
             'is_featured' => $this->is_featured,
             'city' => $this->city,
             'country' => $this->country,
+            'contact_phone' => $this->contact_phone,
+            'contact_email' => $this->when($request->user()?->id !== null, $this->contact_email),
         ];
     }
 }

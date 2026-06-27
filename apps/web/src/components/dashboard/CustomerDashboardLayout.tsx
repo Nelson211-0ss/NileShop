@@ -3,6 +3,7 @@ import {
   Heart,
   LayoutDashboard,
   MapPin,
+  MessageCircle,
   Package,
   Shield,
   Store,
@@ -18,6 +19,7 @@ const customerNav = [
   { to: '/wallet', label: 'Wallet', icon: Wallet },
   { to: '/addresses', label: 'Addresses', icon: MapPin },
   { to: '/wishlist', label: 'Wishlist', icon: Heart },
+  { to: '/messages', label: 'Messages', icon: MessageCircle },
   { to: '/notifications', label: 'Notifications', icon: Bell },
 ];
 

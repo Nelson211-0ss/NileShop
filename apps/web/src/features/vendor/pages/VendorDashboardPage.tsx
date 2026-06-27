@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Package, Plus, ShoppingBag, Store } from 'lucide-react';
-import { vendorApi } from '@/lib/marketplaceApi';
+import { MessageCircle, Package, Plus, ShoppingBag, Store } from 'lucide-react';
+import { conversationApi, vendorApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
@@ -15,6 +15,11 @@ export function VendorDashboardPage() {
   const { data: store } = useQuery({ queryKey: ['vendor-store'], queryFn: vendorApi.myStore });
   const { data: products } = useQuery({ queryKey: ['vendor-products'], queryFn: vendorApi.myProducts });
   const { data: orders } = useQuery({ queryKey: ['vendor-orders'], queryFn: vendorApi.myOrders });
+  const { data: conversations } = useQuery({
+    queryKey: ['vendor-conversations'],
+    queryFn: conversationApi.vendorList,
+    refetchInterval: 15000,
+  });
 
   const removeProduct = useMutation({
     mutationFn: (id: number) => vendorApi.deleteProduct(id),
@@ -23,6 +28,8 @@ export function VendorDashboardPage() {
 
   const productList = products?.data ?? [];
   const orderList = orders?.data ?? [];
+  const messageList = Array.isArray(conversations?.data) ? conversations.data : [];
+  const unreadMessages = messageList.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
 
   return (
     <>
@@ -34,12 +41,25 @@ export function VendorDashboardPage() {
             : 'Manage your products and orders.'
         }
         actions={
-          <Button asChild size="sm">
-            <Link to="/vendor/products/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Add product
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link to="/vendor/messages">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Messages
+                {unreadMessages > 0 && (
+                  <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">
+                    {unreadMessages}
+                  </span>
+                )}
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/vendor/products/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Add product
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -50,6 +70,53 @@ export function VendorDashboardPage() {
       </StatGrid>
 
       <div className="space-y-10">
+        <DashboardSection
+          title="Customer messages"
+          actions={
+            messageList.length > 0 ? (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/vendor/messages">View all</Link>
+              </Button>
+            ) : undefined
+          }
+        >
+          {messageList.length === 0 ? (
+            <EmptyState
+              icon={MessageCircle}
+              title="No messages yet"
+              description="When customers chat with you from a product page, their messages will show here."
+            />
+          ) : (
+            <ListShell>
+              {messageList.slice(0, 5).map((conversation) => (
+                <ListRow key={conversation.id}>
+                  <Link
+                    to={`/vendor/messages/${conversation.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{conversation.peer_name ?? conversation.customer?.name}</p>
+                      {conversation.product && (
+                        <p className="text-xs text-muted-foreground">{conversation.product.name}</p>
+                      )}
+                      {conversation.last_message && (
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                          {conversation.last_message.body}
+                        </p>
+                      )}
+                    </div>
+                    {conversation.unread_count > 0 && (
+                      <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                        {conversation.unread_count} new
+                      </span>
+                    )}
+                  </Link>
+                </ListRow>
+              ))}
+            </ListShell>
+          )}
+        </DashboardSection>
+
         <DashboardSection title="Products">
           {productList.length === 0 ? (
             <EmptyState

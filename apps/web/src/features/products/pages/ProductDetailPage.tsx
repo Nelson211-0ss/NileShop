@@ -9,6 +9,7 @@ import { useCartActions } from '@/hooks/useCart';
 import { extractApiError } from '@/lib/apiErrors';
 import { useAppSelector } from '@/store/hooks';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
+import { VendorContactActions } from '@/components/vendor/VendorContactActions';
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -78,6 +79,15 @@ export function ProductDetailPage() {
         <div>
           {product.vendor && (
             <p className="mb-2 text-sm text-muted-foreground">{product.vendor.store_name}</p>
+          )}
+          {product.vendor && (
+            <VendorContactActions
+              vendorId={product.vendor.id}
+              vendorName={product.vendor.store_name}
+              contactPhone={product.vendor.contact_phone}
+              productId={product.id}
+              className="mb-4"
+            />
           )}
           <h1 className="text-3xl font-bold">{product.name}</h1>
           <div className="mt-2 flex items-center gap-2">

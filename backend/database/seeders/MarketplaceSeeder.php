@@ -80,6 +80,8 @@ class MarketplaceSeeder extends Seeder
                 'approved_at' => now(),
                 'description' => 'Trusted seller on NileShop marketplace.',
                 'city' => 'Juba',
+                'contact_phone' => $user->phone,
+                'contact_email' => $user->email,
             ]);
             $vendors[] = $vendor;
         }

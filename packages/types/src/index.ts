@@ -65,6 +65,30 @@ export interface Vendor {
   is_featured: boolean;
   city: string | null;
   country: string;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+}
+
+export interface ChatMessage {
+  id: number;
+  body: string;
+  sender_id: number;
+  sender?: { id: number; name: string };
+  read_at?: string | null;
+  created_at: string;
+  is_mine?: boolean;
+}
+
+export interface Conversation {
+  id: number;
+  vendor?: Vendor;
+  customer?: { id: number; name: string; avatar?: string | null };
+  product?: { id: number; name: string; slug: string } | null;
+  last_message?: ChatMessage | null;
+  messages?: ChatMessage[];
+  unread_count: number;
+  last_message_at?: string | null;
+  peer_name?: string;
 }
 
 export interface Category {
