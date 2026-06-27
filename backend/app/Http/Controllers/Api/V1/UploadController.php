@@ -29,15 +29,19 @@ class UploadController extends Controller
 
     public function images(Request $request): JsonResponse
     {
+        $files = $request->file('files') ?? $request->file('images');
+
+        $request->merge(['files' => $files]);
+
         $request->validate([
             'files' => 'required|array|max:10',
             'files.*' => 'image|max:5120',
-            'folder' => 'sometimes|string',
+            'folder' => 'sometimes|string|in:products,vendors,banners,reviews,deliveries',
         ]);
 
         $results = $this->uploadService->uploadMultiple(
             $request->file('files'),
-            $request->input('folder', 'uploads'),
+            $request->input('folder', 'products'),
         );
 
         return ApiResponse::success($results, 'Files uploaded successfully.', 201);

@@ -41,7 +41,9 @@ export function VendorProductEditPage() {
       <PageHeader title="Edit product" description={product.name} />
       <VendorProductForm
         initial={initial}
-        imagePaths={product.images?.map((img) => img.path) ?? []}
+        initialImages={
+          product.images?.map((img) => ({ path: img.path, url: img.url })) ?? []
+        }
         submitLabel="Save changes"
         onSubmit={(payload) => vendorApi.updateProduct(productId, payload)}
       />

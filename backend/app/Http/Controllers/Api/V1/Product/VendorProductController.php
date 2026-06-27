@@ -124,7 +124,12 @@ class VendorProductController extends Controller
         ]);
 
         foreach ($data['paths'] as $index => $path) {
-            $this->productService->addImage($product, $path, $index === 0 && ! $product->images()->exists());
+            $this->productService->addImage(
+                $product,
+                $path,
+                $index === 0 && ! $product->images()->exists(),
+                $index,
+            );
         }
 
         return ApiResponse::success(

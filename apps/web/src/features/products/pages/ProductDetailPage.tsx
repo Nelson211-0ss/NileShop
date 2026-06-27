@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useCartActions } from '@/hooks/useCart';
 import { extractApiError } from '@/lib/apiErrors';
 import { useAppSelector } from '@/store/hooks';
+import { ProductImageGallery } from '@/components/product/ProductImageGallery';
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -40,7 +41,7 @@ export function ProductDetailPage() {
     return <div className="page-container py-12">Product not found.</div>;
   }
 
-  const image = product.images?.find((i) => i.is_primary) ?? product.images?.[0];
+  const images = product.images ?? [];
   const discount =
     product.compare_price && product.compare_price > product.price
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
@@ -73,9 +74,7 @@ export function ProductDetailPage() {
   return (
     <div className="page-container py-8">
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
-          {image ? <img src={image.url} alt={product.name} className="h-full w-full object-cover" /> : null}
-        </div>
+        <ProductImageGallery images={images} name={product.name} />
         <div>
           {product.vendor && (
             <p className="mb-2 text-sm text-muted-foreground">{product.vendor.store_name}</p>

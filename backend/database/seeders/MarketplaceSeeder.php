@@ -129,7 +129,7 @@ class MarketplaceSeeder extends Seeder
                 'tags' => ['popular', 'south-sudan'],
             ]);
 
-            $imageService->seedForProduct($product, $slug);
+            $imageService->seedForProduct($product);
         }
 
         Banner::create([

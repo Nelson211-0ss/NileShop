@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { catalogApi, uploadApi } from '@/lib/marketplaceApi';
+import { catalogApi } from '@/lib/marketplaceApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ImageUploadField, type UploadedImage } from '@/components/vendor/ImageUploadField';
+import { extractApiError } from '@/lib/apiErrors';
 
 export interface ProductFormState {
   name: string;
@@ -32,17 +34,22 @@ export const emptyProductForm: ProductFormState = {
 
 interface VendorProductFormProps {
   initial?: ProductFormState;
-  imagePaths?: string[];
+  initialImages?: UploadedImage[];
   submitLabel: string;
   onSubmit: (data: Record<string, unknown>) => Promise<unknown>;
 }
 
-export function VendorProductForm({ initial, imagePaths = [], submitLabel, onSubmit }: VendorProductFormProps) {
+export function VendorProductForm({
+  initial,
+  initialImages = [],
+  submitLabel,
+  onSubmit,
+}: VendorProductFormProps) {
   const navigate = useNavigate();
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: catalogApi.categories });
   const [form, setForm] = useState<ProductFormState>(initial ?? emptyProductForm);
-  const [paths, setPaths] = useState<string[]>(imagePaths);
-  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<UploadedImage[]>(initialImages);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const save = useMutation({
     mutationFn: () =>
@@ -56,29 +63,18 @@ export function VendorProductForm({ initial, imagePaths = [], submitLabel, onSub
         compare_price: form.compare_price ? Number(form.compare_price) : null,
         stock: Number(form.stock),
         status: form.status,
-        image_paths: paths,
+        image_paths: images.map((img) => img.path),
       }),
     onSuccess: () => navigate('/vendor'),
+    onError: (err) => setSaveError(extractApiError(err, 'Failed to save product.')),
   });
-
-  const handleUpload = async (files: FileList | null) => {
-    if (!files?.length) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      Array.from(files).forEach((file) => formData.append('images[]', file));
-      const result = await uploadApi.images(formData);
-      setPaths((prev) => [...prev, ...(result.data?.map((img) => img.path) ?? [])]);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <form
       className="space-y-5"
       onSubmit={(e) => {
         e.preventDefault();
+        setSaveError(null);
         save.mutate();
       }}
     >
@@ -177,20 +173,14 @@ export function VendorProductForm({ initial, imagePaths = [], submitLabel, onSub
           />
         </div>
         <div className="sm:col-span-2">
-          <Label htmlFor="images">Product images</Label>
-          <Input
-            id="images"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleUpload(e.target.files)}
-            disabled={uploading}
-          />
-          {paths.length > 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">{paths.length} image(s) attached</p>
-          )}
+          <Label>Product photos</Label>
+          <div className="mt-2">
+            <ImageUploadField value={images} onChange={setImages} max={10} />
+          </div>
         </div>
       </div>
+
+      {saveError && <p className="text-sm text-destructive">{saveError}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={save.isPending}>

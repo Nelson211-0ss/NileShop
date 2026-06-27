@@ -108,28 +108,33 @@ class ProductService
         $product->delete();
     }
 
-    public function addImage(Product $product, string $path, bool $isPrimary = false): ProductImage
-    {
+    public function addImage(
+        Product $product,
+        string $path,
+        bool $isPrimary = false,
+        ?int $sortOrder = null,
+        ?string $alt = null,
+    ): ProductImage {
         if ($isPrimary) {
             $product->images()->update(['is_primary' => false]);
         }
 
         return $product->images()->create([
             'path' => $path,
+            'alt' => $alt ?? $product->name,
             'is_primary' => $isPrimary,
+            'sort_order' => $sortOrder ?? (int) $product->images()->max('sort_order') + 1,
         ]);
     }
 
     public function syncImages(Product $product, array $paths): void
     {
-        if ($paths === []) {
-            return;
-        }
+        $paths = array_values(array_filter($paths, fn ($path) => is_string($path) && $path !== ''));
 
         $product->images()->delete();
 
         foreach ($paths as $index => $path) {
-            $this->addImage($product, $path, $index === 0);
+            $this->addImage($product, $path, $index === 0, $index, $product->name);
         }
     }
 

@@ -51,7 +51,9 @@ export function ProductCard({ product }: { product: Product }) {
               className="h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {
-                e.currentTarget.src = `https://picsum.photos/seed/${product.slug}/400/500`;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src =
+                  'https://images.unsplash.com/photo-1472851293608-84c544544556?auto=format&fit=crop&w=400&h=500&q=80';
               }}
             />
           ) : (

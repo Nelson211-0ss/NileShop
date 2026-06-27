@@ -2,23 +2,25 @@
 
 namespace App\Features\Product\Services;
 
+use App\Features\Product\Support\ProductImageCatalog;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Support\StorageUrl;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductImageService
 {
-    public function seedForProduct(Product $product, ?string $seed = null): ProductImage
+    public function seedForProduct(Product $product, ?string $imageUrl = null): ProductImage
     {
-        $seed ??= Str::slug($product->name);
+        $product->loadMissing('category.parent');
+
+        $imageUrl ??= ProductImageCatalog::resolve($product);
         $path = "products/{$product->id}.jpg";
         $disk = Storage::disk(StorageUrl::disk());
 
-        if (! $this->storeSeedImage($disk, $path, $seed)) {
-            $path = $this->fallbackUrl($seed);
+        if (! $this->storeImage($disk, $path, $imageUrl)) {
+            $path = $imageUrl;
         }
 
         $product->images()->delete();
@@ -35,7 +37,7 @@ class ProductImageService
     {
         $count = 0;
 
-        Product::query()->each(function (Product $product) use (&$count) {
+        Product::query()->with(['category.parent'])->each(function (Product $product) use (&$count) {
             $this->seedForProduct($product);
             $count++;
         });
@@ -43,13 +45,13 @@ class ProductImageService
         return $count;
     }
 
-    private function storeSeedImage(Filesystem $disk, string $path, string $seed): bool
+    private function storeImage(Filesystem $disk, string $path, string $url): bool
     {
         if ($disk->exists($path)) {
-            return true;
+            $disk->delete($path);
         }
 
-        $content = $this->downloadSeedImage($seed);
+        $content = $this->downloadImage($url);
 
         if ($content === null) {
             return false;
@@ -60,11 +62,13 @@ class ProductImageService
         return $disk->exists($path);
     }
 
-    private function downloadSeedImage(string $seed): ?string
+    private function downloadImage(string $url): ?string
     {
-        $url = 'https://picsum.photos/seed/'.rawurlencode($seed).'/600/600';
         $context = stream_context_create([
-            'http' => ['timeout' => 20],
+            'http' => [
+                'timeout' => 20,
+                'header' => "User-Agent: NileShop/1.0\r\n",
+            ],
             'ssl' => ['verify_peer' => true],
         ]);
 
@@ -75,10 +79,5 @@ class ProductImageService
         }
 
         return $content;
-    }
-
-    private function fallbackUrl(string $seed): string
-    {
-        return 'https://picsum.photos/seed/'.rawurlencode($seed).'/600/600';
     }
 }
