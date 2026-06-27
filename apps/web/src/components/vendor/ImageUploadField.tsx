@@ -53,8 +53,8 @@ export function ImageUploadField({ value, onChange, max = 10 }: ImageUploadField
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {value.map((img, index) => (
-          <div key={img.path} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border">
-            <img src={img.url} alt="" className="h-full w-full object-cover" />
+          <div key={img.path} className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border">
+            <img src={img.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
             {index === 0 && (
               <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-medium text-primary-foreground">
                 Cover

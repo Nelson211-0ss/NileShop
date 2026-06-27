@@ -41,14 +41,14 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Link to={`/products/${product.slug}`} className="group block">
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-        <div className="relative aspect-square bg-muted">
+    <Link to={`/products/${product.slug}`} className="group block h-full">
+      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="relative aspect-square shrink-0 overflow-hidden bg-muted">
           {image ? (
             <img
               src={image.url}
               alt={product.name}
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
@@ -57,7 +57,7 @@ export function ProductCard({ product }: { product: Product }) {
               }}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
+            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground">
               No image
             </div>
           )}
@@ -85,22 +85,26 @@ export function ProductCard({ product }: { product: Product }) {
             <ShoppingCart className="h-3 w-3" />
           </Button>
         </div>
-        <div className="px-1.5 py-1">
-          {product.vendor && (
-            <p className="truncate text-[9px] text-muted-foreground">{product.vendor.store_name}</p>
-          )}
-          <h3 className="line-clamp-1 text-[11px] font-medium leading-tight transition-colors group-hover:text-primary">
+        <div className="flex h-[4.25rem] flex-col px-1.5 py-1">
+          <p className="h-[14px] shrink-0 truncate text-[9px] leading-[14px] text-muted-foreground">
+            {product.vendor?.store_name ?? '\u00A0'}
+          </p>
+          <h3 className="line-clamp-1 shrink-0 text-[11px] font-medium leading-tight transition-colors group-hover:text-primary">
             {product.name}
           </h3>
           <div className="mt-0.5 flex items-center gap-0.5">
             <Star className="h-2.5 w-2.5 shrink-0 fill-accent text-accent" />
             <span className="text-[9px] text-muted-foreground">{product.rating}</span>
           </div>
-          <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
-            <span className="text-xs font-bold">{formatCurrency(product.price)}</span>
-            {product.compare_price && (
-              <span className="text-[9px] text-muted-foreground line-through">
+          <div className="mt-0.5 flex items-baseline gap-1 overflow-hidden">
+            <span className="truncate text-xs font-bold">{formatCurrency(product.price)}</span>
+            {product.compare_price ? (
+              <span className="shrink-0 text-[9px] text-muted-foreground line-through">
                 {formatCurrency(product.compare_price)}
+              </span>
+            ) : (
+              <span className="shrink-0 text-[9px] leading-none opacity-0" aria-hidden>
+                {'\u00A0'}
               </span>
             )}
           </div>

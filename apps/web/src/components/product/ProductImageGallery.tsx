@@ -21,8 +21,12 @@ export function ProductImageGallery({ images, name }: ProductImageGalleryProps) 
 
   return (
     <div className="space-y-3">
-      <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
-        <img src={active.url} alt={active.alt ?? name} className="h-full w-full object-cover" />
+      <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted">
+        <img
+          src={active.url}
+          alt={active.alt ?? name}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       </div>
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">

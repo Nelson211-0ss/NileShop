@@ -10,7 +10,7 @@ export function ProductGrid({
   return (
     <div
       className={cn(
-        'grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
+        'grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 [&>*]:min-w-0 [&>*]:h-full',
         className,
       )}
     >
@@ -23,7 +23,10 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <ProductGrid>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="h-36 rounded-lg bg-muted animate-pulse" />
+        <div key={i} className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="aspect-square animate-pulse bg-muted" />
+          <div className="h-[4.25rem] animate-pulse bg-muted/40" />
+        </div>
       ))}
     </ProductGrid>
   );
