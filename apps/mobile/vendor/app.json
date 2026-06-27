@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "NileShop Vendor",
+    "slug": "nileshop-vendor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light"
+  }
+}

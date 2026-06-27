@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
-vendor/
+backend/vendor/
+apps/mobile/vendor/node_modules/
 
 # Build
 dist/
