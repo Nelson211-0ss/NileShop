@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { catalogApi, uploadApi, vendorApi } from '@/lib/marketplaceApi';
+import { catalogApi, uploadApi } from '@/lib/marketplaceApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
