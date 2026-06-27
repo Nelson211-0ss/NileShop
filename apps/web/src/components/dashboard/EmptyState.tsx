@@ -10,13 +10,19 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted/50">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-      </div>
+    <div className="py-10 text-center">
+      <Icon className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" />
       <p className="font-medium">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>}
+      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
+}
+
+export function ListShell({ children }: { children: ReactNode }) {
+  return <div className="divide-y divide-border">{children}</div>;
+}
+
+export function ListRow({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={`py-4 first:pt-0 last:pb-0 ${className ?? ''}`}>{children}</div>;
 }

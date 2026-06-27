@@ -94,7 +94,7 @@ export function DashboardSidebar({ title, subtitle, nav, footerNav }: DashboardS
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-card transition-transform lg:static lg:z-auto lg:shrink-0 lg:translate-x-0 lg:rounded-xl lg:border lg:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-background transition-transform lg:static lg:z-auto lg:w-56 lg:shrink-0 lg:translate-x-0 lg:border-r lg:bg-transparent',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
       >

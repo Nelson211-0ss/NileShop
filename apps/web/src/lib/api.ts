@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getStorageItem, removeStorageItem } from '@nileshop/utils';
+import { getOrCreateCartSessionId } from '@/lib/cartSession';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -16,6 +17,9 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  config.headers['X-Cart-Session'] = getOrCreateCartSessionId();
+
   return config;
 });
 
@@ -24,7 +28,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       removeStorageItem('nileshop_token');
-      if (!window.location.pathname.startsWith('/auth')) {
+      const path = window.location.pathname;
+      const isPublicPath =
+        path.startsWith('/auth') ||
+        path === '/cart' ||
+        path.startsWith('/products') ||
+        path === '/';
+      if (!isPublicPath) {
         window.location.href = '/auth/login';
       }
     }

@@ -4,9 +4,9 @@ import { adminApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { StatCard } from '@/components/dashboard/StatCard';
+import { StatCard, StatGrid } from '@/components/dashboard/StatCard';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 export function AdminDashboardPage() {
@@ -28,102 +28,88 @@ export function AdminDashboardPage() {
 
   return (
     <>
-      <PageHeader
-        title="Overview"
-        description="Monitor platform activity, vendors, and deliveries."
-      />
+      <PageHeader title="Overview" description="Monitor platform activity, vendors, and deliveries." />
 
       {s && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatGrid className="lg:grid-cols-4">
           <StatCard label="Users" value={s.total_users} icon={Users} />
           <StatCard label="Orders" value={s.total_orders} icon={ShoppingBag} />
           <StatCard label="Revenue today" value={formatCurrency(s.revenue_today)} icon={Package} />
           <StatCard label="Pending vendors" value={s.pending_vendors} icon={Store} />
-        </div>
+        </StatGrid>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-10">
         <DashboardSection title="Pending vendor approvals">
           {vendors?.data?.length ? (
-            <div className="space-y-3">
+            <ListShell>
               {vendors.data.map((v) => (
-                <div
-                  key={v.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-medium">{v.store_name}</p>
-                    <p className="text-sm text-muted-foreground">{v.city}</p>
+                <ListRow key={v.id}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium">{v.store_name}</p>
+                      <p className="text-sm text-muted-foreground">{v.city}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          adminApi.approveVendor(v.id).then(() =>
+                            queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
+                          )
+                        }
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          adminApi.rejectVendor(v.id).then(() =>
+                            queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
+                          )
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        adminApi.approveVendor(v.id).then(() =>
-                          queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
-                        )
-                      }
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        adminApi.rejectVendor(v.id).then(() =>
-                          queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
-                        )
-                      }
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                </div>
+                </ListRow>
               ))}
-            </div>
+            </ListShell>
           ) : (
-            <EmptyState
-              icon={Store}
-              title="No pending vendors"
-              description="New vendor applications will appear here."
-            />
+            <EmptyState icon={Store} title="No pending vendors" />
           )}
         </DashboardSection>
 
         <DashboardSection title="Deliveries">
           {deliveries?.data?.length ? (
-            <div className="space-y-3">
+            <ListShell>
               {deliveries.data.map((d) => (
-                <div key={d.uuid} className="rounded-xl border border-border bg-background p-4">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <div>
+                <ListRow key={d.uuid}>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">{d.order?.order_number ?? d.uuid}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <StatusBadge status={d.status} />
-                        {d.rider && (
-                          <span className="text-xs text-muted-foreground">Rider: {d.rider.name}</span>
-                        )}
+                      <StatusBadge status={d.status} />
+                      {d.rider && (
+                        <span className="text-xs text-muted-foreground">Rider: {d.rider.name}</span>
+                      )}
+                    </div>
+                    {!d.rider && d.status === 'pending' && (
+                      <div className="flex flex-wrap gap-2">
+                        {riders?.data?.map((r) => (
+                          <Button key={r.id} size="sm" variant="ghost" onClick={() => assignRider(d.uuid, r.id)}>
+                            Assign {r.name}
+                          </Button>
+                        ))}
                       </div>
-                    </div>
+                    )}
                   </div>
-                  {!d.rider && d.status === 'pending' && (
-                    <div className="flex flex-wrap gap-2">
-                      {riders?.data?.map((r) => (
-                        <Button key={r.id} size="sm" variant="outline" onClick={() => assignRider(d.uuid, r.id)}>
-                          Assign {r.name}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </ListRow>
               ))}
-            </div>
+            </ListShell>
           ) : (
-            <EmptyState
-              icon={Package}
-              title="No deliveries"
-              description="Delivery requests will show up here."
-            />
+            <EmptyState icon={Package} title="No deliveries" />
           )}
         </DashboardSection>
       </div>

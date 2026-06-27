@@ -6,7 +6,7 @@ import type { Address } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
@@ -48,7 +48,7 @@ export function AddressesPage() {
         title="Addresses"
         description="Save delivery addresses for faster checkout."
         actions={
-          <Button size="sm" onClick={() => setShowForm((v) => !v)}>
+          <Button size="sm" variant="ghost" onClick={() => setShowForm((v) => !v)}>
             {showForm ? 'Cancel' : 'Add address'}
           </Button>
         }
@@ -60,7 +60,7 @@ export function AddressesPage() {
             e.preventDefault();
             create.mutate();
           }}
-          className="mb-6 space-y-3 rounded-xl border border-border bg-background p-5"
+          className="mb-8 space-y-3"
         >
           {(['label', 'full_name', 'phone', 'address_line_1', 'city', 'country'] as const).map((field) => (
             <div key={field}>
@@ -87,7 +87,7 @@ export function AddressesPage() {
       )}
 
       {isLoading ? (
-        <div className="h-24 animate-pulse rounded-xl bg-muted" />
+        <div className="h-16 animate-pulse rounded-lg bg-muted" />
       ) : addresses.length === 0 ? (
         <EmptyState
           icon={MapPin}
@@ -100,30 +100,29 @@ export function AddressesPage() {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <ListShell>
           {addresses.map((addr: Address) => (
-            <div
-              key={addr.id}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:flex-row sm:items-start sm:justify-between"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{addr.label}</p>
-                  {addr.is_default && <StatusBadge status="default" />}
+            <ListRow key={addr.id}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{addr.label}</p>
+                    {addr.is_default && <StatusBadge status="default" />}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {addr.full_name} · {addr.phone}
+                  </p>
+                  <p className="text-sm">
+                    {addr.address_line_1}, {addr.city}, {addr.country}
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {addr.full_name} · {addr.phone}
-                </p>
-                <p className="text-sm">
-                  {addr.address_line_1}, {addr.city}, {addr.country}
-                </p>
+                <Button size="sm" variant="ghost" onClick={() => remove.mutate(addr.id)}>
+                  Delete
+                </Button>
               </div>
-              <Button size="sm" variant="outline" onClick={() => remove.mutate(addr.id)}>
-                Delete
-              </Button>
-            </div>
+            </ListRow>
           ))}
-        </div>
+        </ListShell>
       )}
     </>
   );

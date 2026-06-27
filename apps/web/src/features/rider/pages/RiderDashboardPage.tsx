@@ -5,9 +5,9 @@ import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { StatCard } from '@/components/dashboard/StatCard';
+import { StatCard, StatGrid } from '@/components/dashboard/StatCard';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency } from '@nileshop/utils';
 
@@ -75,36 +75,20 @@ export function RiderDashboardPage() {
       />
 
       {earnings?.data && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <StatCard
-            label="Today's earnings"
-            value={formatCurrency(earnings.data.today_earnings)}
-            icon={Wallet}
-          />
-          <StatCard
-            label="Total earnings"
-            value={formatCurrency(earnings.data.total_earnings)}
-            icon={Wallet}
-          />
-          <StatCard
-            label="Completed"
-            value={earnings.data.completed_deliveries}
-            icon={CheckCircle2}
-          />
-        </div>
+        <StatGrid className="sm:grid-cols-3 lg:grid-cols-3">
+          <StatCard label="Today" value={formatCurrency(earnings.data.today_earnings)} icon={Wallet} />
+          <StatCard label="Total earnings" value={formatCurrency(earnings.data.total_earnings)} icon={Wallet} />
+          <StatCard label="Completed" value={earnings.data.completed_deliveries} icon={CheckCircle2} />
+        </StatGrid>
       )}
 
-      <DashboardSection title="Assigned deliveries" description="Pick up and complete active orders.">
-        {deliveries?.data?.length === 0 ? (
-          <EmptyState
-            icon={Truck}
-            title="No active deliveries"
-            description="New assignments will appear here when available."
-          />
+      <DashboardSection title="Assigned deliveries">
+        {!deliveries?.data?.length ? (
+          <EmptyState icon={Truck} title="No active deliveries" />
         ) : (
-          <div className="space-y-3">
-            {deliveries?.data?.map((d) => (
-              <div key={d.uuid} className="rounded-xl border border-border bg-background p-4">
+          <ListShell>
+            {deliveries.data.map((d) => (
+              <ListRow key={d.uuid}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -112,29 +96,29 @@ export function RiderDashboardPage() {
                       <StatusBadge status={d.status} />
                     </div>
                     {d.order?.shipping_address && (
-                      <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                      <p className="mt-1 flex items-start gap-2 text-sm text-muted-foreground">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                         {d.order.shipping_address.address_line_1}, {d.order.shipping_address.city}
                       </p>
                     )}
+                    <div className="mt-2 flex gap-2">
+                      {d.status === 'assigned' && (
+                        <Button size="sm" onClick={() => pickup(d.uuid)}>
+                          Mark picked up
+                        </Button>
+                      )}
+                      {d.status === 'picked_up' && (
+                        <Button size="sm" onClick={() => complete(d.uuid)}>
+                          Mark delivered
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <p className="font-semibold">{formatCurrency(d.earnings)}</p>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  {d.status === 'assigned' && (
-                    <Button size="sm" onClick={() => pickup(d.uuid)}>
-                      Mark picked up
-                    </Button>
-                  )}
-                  {d.status === 'picked_up' && (
-                    <Button size="sm" onClick={() => complete(d.uuid)}>
-                      Mark delivered
-                    </Button>
-                  )}
-                </div>
-              </div>
+              </ListRow>
             ))}
-          </div>
+          </ListShell>
         )}
       </DashboardSection>
     </>

@@ -10,6 +10,7 @@ use App\Features\Auth\DTOs\OtpVerifyDTO;
 use App\Features\Auth\DTOs\RegisterUserDTO;
 use App\Features\Auth\Services\AuthService;
 use App\Features\Auth\Services\OtpService;
+use App\Features\Cart\Services\CartService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
@@ -37,6 +38,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthService $authService,
         private readonly OtpService $otpService,
+        private readonly CartService $cartService,
     ) {}
 
     #[OA\Post(
@@ -75,6 +77,7 @@ class AuthController extends Controller
 
         $user = $this->authService->register($dto);
         $tokenData = $this->authService->createTokenResponse($user, 'web');
+        $this->mergeGuestCartIfNeeded($request, $tokenData['user']);
 
         return ApiResponse::success(
             new AuthTokenResource($tokenData),
@@ -98,6 +101,7 @@ class AuthController extends Controller
 
         $user = $this->authService->registerVendor($dto, $request->validated('store_name'));
         $tokenData = $this->authService->createTokenResponse($user, 'web');
+        $this->mergeGuestCartIfNeeded($request, $tokenData['user']);
 
         return ApiResponse::success(
             new AuthTokenResource($tokenData),
@@ -116,6 +120,7 @@ class AuthController extends Controller
         );
 
         $tokenData = $this->authService->login($dto);
+        $this->mergeGuestCartIfNeeded($request, $tokenData['user']);
 
         return ApiResponse::success(
             new AuthTokenResource($tokenData),
@@ -189,6 +194,7 @@ class AuthController extends Controller
             $user,
             $request->validated('device_name', 'web'),
         );
+        $this->mergeGuestCartIfNeeded($request, $tokenData['user']);
 
         return ApiResponse::success(
             new AuthTokenResource($tokenData),
@@ -248,5 +254,16 @@ class AuthController extends Controller
         }
 
         return ApiResponse::success(null, 'Password reset successfully.');
+    }
+
+    private function mergeGuestCartIfNeeded(Request $request, User $user): void
+    {
+        $sessionId = $request->header('X-Cart-Session');
+
+        if (! $sessionId) {
+            return;
+        }
+
+        $this->cartService->mergeGuestCart($user, $sessionId);
     }
 }

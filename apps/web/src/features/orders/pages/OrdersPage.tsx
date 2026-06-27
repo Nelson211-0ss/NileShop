@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Package, ShoppingBag } from 'lucide-react';
 import { orderApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
@@ -17,7 +17,7 @@ export function OrdersPage() {
       <PageHeader title="Orders" description="Track and manage your purchases." />
 
       {isLoading ? (
-        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-16 animate-pulse rounded-lg bg-muted" />
       ) : orders.length === 0 ? (
         <EmptyState
           icon={Package}
@@ -30,30 +30,28 @@ export function OrdersPage() {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <ListShell>
           {orders.map((order) => (
-            <Link
-              key={order.uuid}
-              to={`/orders/${order.uuid}`}
-              className="block rounded-xl border border-border bg-background p-4 transition-colors hover:bg-muted/40"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-medium">{order.order_number}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {new Date(order.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">{formatCurrency(order.total)}</p>
-                  <div className="mt-2">
-                    <StatusBadge status={order.status} />
+            <ListRow key={order.uuid}>
+              <Link to={`/orders/${order.uuid}`} className="block hover:opacity-80">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium">{order.order_number}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{formatCurrency(order.total)}</p>
+                    <div className="mt-1">
+                      <StatusBadge status={order.status} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </ListRow>
           ))}
-        </div>
+        </ListShell>
       )}
     </>
   );
@@ -61,6 +59,9 @@ export function OrdersPage() {
 
 export function OrderDetailPage() {
   const { uuid } = useParams<{ uuid: string }>();
+  const location = useLocation();
+  const placed = (location.state as { orderPlaced?: boolean; message?: string })?.orderPlaced;
+  const placedMessage = (location.state as { message?: string })?.message;
   const { data, isLoading } = useQuery({
     queryKey: ['order', uuid],
     queryFn: () => orderApi.get(uuid!),
@@ -69,7 +70,7 @@ export function OrderDetailPage() {
   const order = data?.data;
 
   if (isLoading) {
-    return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+    return <div className="h-48 animate-pulse rounded-lg bg-muted" />;
   }
 
   if (!order) {
@@ -80,25 +81,29 @@ export function OrderDetailPage() {
 
   return (
     <>
+      {placed && (
+        <p className="mb-6 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {placedMessage ?? 'Your order was placed successfully.'}
+        </p>
+      )}
+
       <PageHeader
         title={order.order_number}
         description={new Date(order.created_at).toLocaleString()}
         actions={<StatusBadge status={order.status} />}
       />
 
-      <div className="mb-6 rounded-xl border border-border bg-background p-5">
-        <h2 className="mb-4 text-sm font-semibold">Items</h2>
-        <div className="space-y-3">
-          {order.items?.map((item) => (
-            <div key={item.id} className="flex justify-between text-sm">
-              <span>
-                {item.product_name} × {item.quantity}
-              </span>
-              <span>{formatCurrency(item.total)}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+      <div className="mb-8 space-y-3">
+        <h2 className="text-sm font-semibold">Items</h2>
+        {order.items?.map((item) => (
+          <div key={item.id} className="flex justify-between text-sm">
+            <span>
+              {item.product_name} × {item.quantity}
+            </span>
+            <span>{formatCurrency(item.total)}</span>
+          </div>
+        ))}
+        <div className="space-y-1 border-t border-border pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Subtotal</span>
             <span>{formatCurrency(order.subtotal)}</span>
@@ -117,7 +122,7 @@ export function OrderDetailPage() {
             <span className="text-muted-foreground">Tax</span>
             <span>{formatCurrency(order.tax)}</span>
           </div>
-          <div className="flex justify-between pt-2 text-base font-semibold">
+          <div className="flex justify-between pt-2 font-semibold">
             <span>Total</span>
             <span>{formatCurrency(order.total)}</span>
           </div>
@@ -125,25 +130,23 @@ export function OrderDetailPage() {
       </div>
 
       {order.status_histories && (
-        <div className="rounded-xl border border-border bg-background p-5">
-          <h2 className="mb-4 text-sm font-semibold">Order timeline</h2>
-          <div className="space-y-4">
-            {order.status_histories.map((h, i) => (
-              <div key={i} className="flex gap-3 text-sm">
-                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-foreground/70" />
-                <div>
-                  <p className="font-medium capitalize">{h.status.replace(/_/g, ' ')}</p>
-                  {h.note && <p className="text-muted-foreground">{h.note}</p>}
-                  <p className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</p>
-                </div>
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold">Order timeline</h2>
+          {order.status_histories.map((h, i) => (
+            <div key={i} className="flex gap-3 text-sm">
+              <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/50" />
+              <div>
+                <p className="font-medium capitalize">{h.status.replace(/_/g, ' ')}</p>
+                {h.note && <p className="text-muted-foreground">{h.note}</p>}
+                <p className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
       {['pending', 'confirmed'].includes(order.status) && (
-        <Button variant="outline" className="mt-4" onClick={() => orderApi.cancel(order.uuid)}>
+        <Button variant="ghost" className="mt-6" onClick={() => orderApi.cancel(order.uuid)}>
           Cancel order
         </Button>
       )}

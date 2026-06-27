@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from '@/store';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AuthProvider } from '@/components/AuthProvider';
+import { CartProvider } from '@/components/CartProvider';
 import { ProtectedRoute, RoleRoute } from '@/components/ProtectedRoute';
 import { CustomerDashboardLayout } from '@/components/dashboard/CustomerDashboardLayout';
 import { VendorDashboardLayout } from '@/components/dashboard/VendorDashboardLayout';
@@ -38,6 +39,7 @@ export function App() {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <CartProvider>
           <BrowserRouter>
             <Routes>
               <Route element={<MainLayout />}>
@@ -78,6 +80,7 @@ export function App() {
               </Route>
             </Routes>
           </BrowserRouter>
+          </CartProvider>
         </AuthProvider>
       </QueryClientProvider>
     </Provider>

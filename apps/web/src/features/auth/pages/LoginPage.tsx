@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: { pathname?: string } })?.from?.pathname ?? '/';
   const {
     register,
     handleSubmit,
@@ -33,7 +35,7 @@ export function LoginPage() {
       const response = await authApi.login(values);
       if (response.success && response.data) {
         dispatch(setCredentials({ user: response.data.user, token: response.data.token }));
-        navigate('/');
+        navigate(redirectTo, { replace: true });
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { errors?: Record<string, string[]> } } };

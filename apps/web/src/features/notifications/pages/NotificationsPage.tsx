@@ -3,7 +3,7 @@ import { Bell } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 
 interface Notification {
@@ -33,7 +33,7 @@ export function NotificationsPage() {
       <PageHeader title="Notifications" description="Updates about your orders and account." />
 
       {isLoading ? (
-        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-16 animate-pulse rounded-lg bg-muted" />
       ) : notifications.length === 0 ? (
         <EmptyState
           icon={Bell}
@@ -41,24 +41,19 @@ export function NotificationsPage() {
           description="You're all caught up. New updates will appear here."
         />
       ) : (
-        <div className="space-y-3">
+        <ListShell>
           {notifications.map((n) => (
-            <div
-              key={n.id}
-              className={`rounded-xl border p-4 ${
-                n.read_at ? 'border-border bg-background' : 'border-foreground/15 bg-muted/40'
-              }`}
-            >
-              <p className="text-sm">{n.message}</p>
+            <ListRow key={n.id}>
+              <p className={`text-sm ${n.read_at ? 'text-muted-foreground' : 'font-medium'}`}>{n.message}</p>
               <p className="mt-1 text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
               {!n.read_at && (
-                <Button size="sm" variant="ghost" className="mt-2 h-8 px-2" onClick={() => markRead.mutate(n.id)}>
+                <Button size="sm" variant="ghost" className="mt-1 h-8 px-0" onClick={() => markRead.mutate(n.id)}>
                   Mark read
                 </Button>
               )}
-            </div>
+            </ListRow>
           ))}
-        </div>
+        </ListShell>
       )}
     </>
   );

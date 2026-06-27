@@ -5,9 +5,9 @@ import { vendorApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
-import { EmptyState } from '@/components/dashboard/EmptyState';
+import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
-import { StatCard } from '@/components/dashboard/StatCard';
+import { StatCard, StatGrid } from '@/components/dashboard/StatCard';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 export function VendorDashboardPage() {
@@ -28,7 +28,11 @@ export function VendorDashboardPage() {
     <>
       <PageHeader
         title="Store overview"
-        description={store?.data ? `${store.data.store_name} · ${store.data.city ?? store.data.country}` : 'Manage your products and orders.'}
+        description={
+          store?.data
+            ? `${store.data.store_name} · ${store.data.city ?? store.data.country}`
+            : 'Manage your products and orders.'
+        }
         actions={
           <Button asChild size="sm">
             <Link to="/vendor/products/new">
@@ -39,31 +43,18 @@ export function VendorDashboardPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <StatGrid className="sm:grid-cols-3 lg:grid-cols-3">
         <StatCard label="Products" value={productList.length} icon={Package} />
         <StatCard label="Orders" value={orderList.length} icon={ShoppingBag} />
-        <StatCard
-          label="Store status"
-          value={store?.data?.status ?? '—'}
-          icon={Store}
-        />
-      </div>
+        <StatCard label="Store status" value={store?.data?.status ?? '—'} icon={Store} />
+      </StatGrid>
 
-      <div className="space-y-6">
-        <DashboardSection
-          title="Products"
-          description="Manage your catalog and inventory."
-          actions={
-            <Button asChild size="sm" variant="outline">
-              <Link to="/vendor/products/new">New product</Link>
-            </Button>
-          }
-        >
+      <div className="space-y-10">
+        <DashboardSection title="Products">
           {productList.length === 0 ? (
             <EmptyState
               icon={Package}
               title="No products yet"
-              description="Add your first product to start selling."
               action={
                 <Button asChild size="sm">
                   <Link to="/vendor/products/new">Add product</Link>
@@ -72,19 +63,19 @@ export function VendorDashboardPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="pb-3 font-medium">Product</th>
                     <th className="pb-3 font-medium">Price</th>
                     <th className="pb-3 font-medium">Stock</th>
                     <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th className="pb-3 font-medium" />
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border">
                   {productList.map((product) => (
-                    <tr key={product.id} className="border-b border-border/70">
+                    <tr key={product.id}>
                       <td className="py-3 pr-4">
                         <p className="font-medium">{product.name}</p>
                         {product.category && (
@@ -96,9 +87,9 @@ export function VendorDashboardPage() {
                       <td className="py-3">
                         <StatusBadge status={product.status} />
                       </td>
-                      <td className="py-3">
-                        <div className="flex gap-2">
-                          <Button asChild size="sm" variant="outline">
+                      <td className="py-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button asChild size="sm" variant="ghost">
                             <Link to={`/vendor/products/${product.id}/edit`}>Edit</Link>
                           </Button>
                           <Button
@@ -119,33 +110,28 @@ export function VendorDashboardPage() {
           )}
         </DashboardSection>
 
-        <DashboardSection title="Recent orders" description="Latest orders for your store.">
+        <DashboardSection title="Recent orders">
           {orderList.length === 0 ? (
-            <EmptyState
-              icon={ShoppingBag}
-              title="No orders yet"
-              description="Orders from customers will appear here."
-            />
+            <EmptyState icon={ShoppingBag} title="No orders yet" />
           ) : (
-            <div className="space-y-3">
+            <ListShell>
               {orderList.slice(0, 5).map((order) => (
-                <div
-                  key={order.uuid}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-4"
-                >
-                  <div>
-                    <p className="font-medium">{order.order_number}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </p>
+                <ListRow key={order.uuid}>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{order.order_number}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={order.status} />
+                      <p className="font-semibold">{formatCurrency(order.total)}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={order.status} />
-                    <p className="font-semibold">{formatCurrency(order.total)}</p>
-                  </div>
-                </div>
+                </ListRow>
               ))}
-            </div>
+            </ListShell>
           )}
         </DashboardSection>
       </div>

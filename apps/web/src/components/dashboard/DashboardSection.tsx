@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DashboardSectionProps {
   title: string;
@@ -10,15 +9,15 @@ interface DashboardSectionProps {
 
 export function DashboardSection({ title, description, actions, children }: DashboardSectionProps) {
   return (
-    <Card className="rounded-xl shadow-none">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
-          {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+          <h2 className="text-base font-semibold">{title}</h2>
+          {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
         </div>
         {actions}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+      </div>
+      {children}
+    </section>
   );
 }
