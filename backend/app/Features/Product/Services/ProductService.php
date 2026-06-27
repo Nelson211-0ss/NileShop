@@ -45,7 +45,7 @@ class ProductService
         if (! empty($filters['max_price'])) {
             $query->where('price', '<=', $filters['max_price']);
         }
-        if (! empty($filters['is_featured'])) {
+        if (! empty($filters['is_featured']) || ! empty($filters['featured'])) {
             $query->where('is_featured', true);
         }
 
@@ -135,9 +135,7 @@ class ProductService
 
     public function search(string $query, int $perPage = 20): LengthAwarePaginator
     {
-        return Product::search($query)
-            ->customerVisible()
-            ->paginate($perPage);
+        return $this->list(['q' => $query], $perPage);
     }
 
     public function featured(int $limit = 12): \Illuminate\Database\Eloquent\Collection

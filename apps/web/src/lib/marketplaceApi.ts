@@ -20,7 +20,8 @@ export const homeApi = {
 
 export const catalogApi = {
   categories: () => api.get<ApiResponse<Category[]>>('/catalog/categories').then((r) => r.data),
-  brands: () => api.get<ApiResponse<Brand[]>>('/catalog/brands').then((r) => r.data),
+  brands: () =>
+    api.get<ApiResponse<Brand[]>>('/catalog/brands', { params: { per_page: 100 } }).then((r) => r.data),
 };
 
 export const productApi = {

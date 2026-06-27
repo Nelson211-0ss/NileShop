@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Header, Footer } from '@/components/layout/Header';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 
 const NO_FOOTER_PREFIXES = ['/vendor', '/admin', '/rider'];
 
