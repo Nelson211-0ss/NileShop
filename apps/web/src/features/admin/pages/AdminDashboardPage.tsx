@@ -1,12 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Package, ShoppingBag, Store, Users } from 'lucide-react';
 import { adminApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
+import { DashboardSection } from '@/components/dashboard/DashboardSection';
+import { EmptyState } from '@/components/dashboard/EmptyState';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 export function AdminDashboardPage() {
   const queryClient = useQueryClient();
   const { data } = useQuery({ queryKey: ['admin-dashboard'], queryFn: adminApi.dashboard });
-  const { data: vendors } = useQuery({ queryKey: ['admin-vendors-pending'], queryFn: () => adminApi.vendors('pending') });
+  const { data: vendors } = useQuery({
+    queryKey: ['admin-vendors-pending'],
+    queryFn: () => adminApi.vendors('pending'),
+  });
   const { data: deliveries } = useQuery({ queryKey: ['admin-deliveries'], queryFn: adminApi.deliveries });
   const { data: riders } = useQuery({ queryKey: ['admin-riders'], queryFn: adminApi.riders });
 
@@ -18,65 +27,106 @@ export function AdminDashboardPage() {
   };
 
   return (
-    <div className="page-container py-6">
-      <h1 className="text-xl font-bold mb-4">Admin Dashboard</h1>
+    <>
+      <PageHeader
+        title="Overview"
+        description="Monitor platform activity, vendors, and deliveries."
+      />
 
       {s && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {[
-            { label: 'Users', value: s.total_users },
-            { label: 'Orders', value: s.total_orders },
-            { label: 'Revenue Today', value: formatCurrency(s.revenue_today) },
-            { label: 'Pending Vendors', value: s.pending_vendors },
-          ].map((item) => (
-            <div key={item.label} className="rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="text-xl font-bold">{item.value}</p>
-            </div>
-          ))}
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Users" value={s.total_users} icon={Users} />
+          <StatCard label="Orders" value={s.total_orders} icon={ShoppingBag} />
+          <StatCard label="Revenue today" value={formatCurrency(s.revenue_today)} icon={Package} />
+          <StatCard label="Pending vendors" value={s.pending_vendors} icon={Store} />
         </div>
       )}
 
-      <h2 className="font-semibold text-sm mb-3">Pending Vendor Approvals</h2>
-      <div className="space-y-2 mb-8">
-        {vendors?.data?.map((v) => (
-          <div key={v.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-            <div>
-              <p className="font-medium text-sm">{v.store_name}</p>
-              <p className="text-xs text-muted-foreground">{v.city}</p>
+      <div className="space-y-6">
+        <DashboardSection title="Pending vendor approvals">
+          {vendors?.data?.length ? (
+            <div className="space-y-3">
+              {vendors.data.map((v) => (
+                <div
+                  key={v.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">{v.store_name}</p>
+                    <p className="text-sm text-muted-foreground">{v.city}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        adminApi.approveVendor(v.id).then(() =>
+                          queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
+                        )
+                      }
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        adminApi.rejectVendor(v.id).then(() =>
+                          queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }),
+                        )
+                      }
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => adminApi.approveVendor(v.id).then(() => queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }))}>Approve</Button>
-              <Button size="sm" variant="outline" onClick={() => adminApi.rejectVendor(v.id).then(() => queryClient.invalidateQueries({ queryKey: ['admin-vendors-pending'] }))}>Reject</Button>
-            </div>
-          </div>
-        ))}
-        {!vendors?.data?.length && <p className="text-sm text-muted-foreground">No pending vendors.</p>}
-      </div>
+          ) : (
+            <EmptyState
+              icon={Store}
+              title="No pending vendors"
+              description="New vendor applications will appear here."
+            />
+          )}
+        </DashboardSection>
 
-      <h2 className="font-semibold text-sm mb-3">Deliveries</h2>
-      <div className="space-y-2">
-        {deliveries?.data?.map((d) => (
-          <div key={d.uuid} className="rounded-lg border border-border p-3">
-            <div className="flex flex-wrap justify-between gap-2 mb-2">
-              <div>
-                <p className="text-sm font-medium">{d.order?.order_number ?? d.uuid}</p>
-                <p className="text-xs text-muted-foreground capitalize">{d.status} {d.rider ? `· ${d.rider.name}` : ''}</p>
-              </div>
+        <DashboardSection title="Deliveries">
+          {deliveries?.data?.length ? (
+            <div className="space-y-3">
+              {deliveries.data.map((d) => (
+                <div key={d.uuid} className="rounded-xl border border-border bg-background p-4">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{d.order?.order_number ?? d.uuid}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <StatusBadge status={d.status} />
+                        {d.rider && (
+                          <span className="text-xs text-muted-foreground">Rider: {d.rider.name}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {!d.rider && d.status === 'pending' && (
+                    <div className="flex flex-wrap gap-2">
+                      {riders?.data?.map((r) => (
+                        <Button key={r.id} size="sm" variant="outline" onClick={() => assignRider(d.uuid, r.id)}>
+                          Assign {r.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-            {!d.rider && d.status === 'pending' && (
-              <div className="flex flex-wrap gap-2">
-                {riders?.data?.map((r) => (
-                  <Button key={r.id} size="sm" variant="outline" onClick={() => assignRider(d.uuid, r.id)}>
-                    Assign {r.name}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-        {!deliveries?.data?.length && <p className="text-sm text-muted-foreground">No deliveries.</p>}
+          ) : (
+            <EmptyState
+              icon={Package}
+              title="No deliveries"
+              description="Delivery requests will show up here."
+            />
+          )}
+        </DashboardSection>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Bell } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/dashboard/EmptyState';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 
 interface Notification {
   id: string;
@@ -26,20 +29,30 @@ export function NotificationsPage() {
   const notifications = data?.data ?? [];
 
   return (
-    <div className="page-container py-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Notifications</h1>
+    <>
+      <PageHeader title="Notifications" description="Updates about your orders and account." />
+
       {isLoading ? (
-        <div className="h-32 bg-muted rounded-2xl animate-pulse" />
+        <div className="h-32 animate-pulse rounded-xl bg-muted" />
       ) : notifications.length === 0 ? (
-        <p className="text-muted-foreground">No notifications yet.</p>
+        <EmptyState
+          icon={Bell}
+          title="No notifications"
+          description="You're all caught up. New updates will appear here."
+        />
       ) : (
         <div className="space-y-3">
           {notifications.map((n) => (
-            <div key={n.id} className={`rounded-2xl border p-4 ${n.read_at ? 'border-border' : 'border-primary/30 bg-primary/5'}`}>
+            <div
+              key={n.id}
+              className={`rounded-xl border p-4 ${
+                n.read_at ? 'border-border bg-background' : 'border-foreground/15 bg-muted/40'
+              }`}
+            >
               <p className="text-sm">{n.message}</p>
-              <p className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</p>
               {!n.read_at && (
-                <Button size="sm" variant="ghost" className="mt-2" onClick={() => markRead.mutate(n.id)}>
+                <Button size="sm" variant="ghost" className="mt-2 h-8 px-2" onClick={() => markRead.mutate(n.id)}>
                   Mark read
                 </Button>
               )}
@@ -47,6 +60,6 @@ export function NotificationsPage() {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -1,11 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Bell, Heart, MapPin, Package, Wallet } from 'lucide-react';
 import { authApi } from '@/features/auth/api/authApi';
 import { walletApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
 import { logout } from '@/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+
+const quickLinks = [
+  { to: '/orders', label: 'Orders', icon: Package },
+  { to: '/wallet', label: 'Wallet', icon: Wallet },
+  { to: '/addresses', label: 'Addresses', icon: MapPin },
+  { to: '/wishlist', label: 'Wishlist', icon: Heart },
+  { to: '/notifications', label: 'Notifications', icon: Bell },
+];
 
 export function AccountPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -20,35 +32,52 @@ export function AccountPage() {
   if (!user) return null;
 
   return (
-    <div className="page-container py-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">My Account</h1>
-      <div className="rounded-2xl border border-border p-6 mb-6">
-        <h2 className="font-semibold">{user.name}</h2>
-        <p className="text-muted-foreground">{user.email}</p>
-        <p className="text-sm text-muted-foreground mt-1">Roles: {user.roles.join(', ')}</p>
+    <>
+      <PageHeader
+        title="Overview"
+        description="Manage your profile, orders, and account settings."
+        actions={
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            Sign out
+          </Button>
+        }
+      />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <StatCard
+          label="Wallet balance"
+          value={wallet?.data ? formatCurrency(wallet.data.balance, wallet.data.currency) : '—'}
+          icon={Wallet}
+          hint="Use at checkout for instant payment"
+        />
+        <StatCard
+          label="Account email"
+          value={user.email}
+          icon={Package}
+          hint={`Roles: ${user.roles.join(', ')}`}
+        />
       </div>
 
-      {wallet?.data && (
-        <div className="rounded-2xl border border-border p-6 mb-6 bg-primary/5">
-          <p className="text-sm text-muted-foreground">Wallet Balance</p>
-          <p className="text-3xl font-bold">{formatCurrency(wallet.data.balance)}</p>
-        </div>
-      )}
+      <Card className="mb-6 rounded-xl shadow-none">
+        <CardContent className="p-5">
+          <p className="text-sm text-muted-foreground">Signed in as</p>
+          <p className="mt-1 text-lg font-semibold">{user.name}</p>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Button variant="outline" asChild className="h-auto py-4"><Link to="/orders">My Orders</Link></Button>
-        <Button variant="outline" asChild className="h-auto py-4"><Link to="/wishlist">Wishlist</Link></Button>
-        <Button variant="outline" asChild className="h-auto py-4"><Link to="/addresses">Addresses</Link></Button>
-        <Button variant="outline" asChild className="h-auto py-4"><Link to="/wallet">Wallet</Link></Button>
-        {user.roles.includes('vendor') && (
-          <Button variant="outline" asChild className="h-auto py-4"><Link to="/vendor">Vendor Dashboard</Link></Button>
-        )}
-        {user.roles.includes('administrator') && (
-          <Button variant="outline" asChild className="h-auto py-4"><Link to="/admin">Admin Panel</Link></Button>
-        )}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {quickLinks.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50"
+          >
+            <link.icon className="h-4 w-4 text-muted-foreground" />
+            {link.label}
+          </Link>
+        ))}
       </div>
-
-      <Button variant="ghost" className="mt-6 text-destructive" onClick={handleLogout}>Sign out</Button>
-    </div>
+    </>
   );
 }

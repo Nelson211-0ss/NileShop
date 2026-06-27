@@ -1,92 +1,154 @@
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Package, Plus, ShoppingBag, Store } from 'lucide-react';
 import { vendorApi } from '@/lib/marketplaceApi';
-import { ProductCard } from '@/components/product/ProductCard';
-import { ProductGrid } from '@/components/product/ProductGrid';
-import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@nileshop/utils';
+import { Button } from '@/components/ui/button';
+import { DashboardSection } from '@/components/dashboard/DashboardSection';
+import { EmptyState } from '@/components/dashboard/EmptyState';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 export function VendorDashboardPage() {
+  const queryClient = useQueryClient();
   const { data: store } = useQuery({ queryKey: ['vendor-store'], queryFn: vendorApi.myStore });
-  const { data: products, refetch: refetchProducts } = useQuery({ queryKey: ['vendor-products'], queryFn: vendorApi.myProducts });
+  const { data: products } = useQuery({ queryKey: ['vendor-products'], queryFn: vendorApi.myProducts });
   const { data: orders } = useQuery({ queryKey: ['vendor-orders'], queryFn: vendorApi.myOrders });
 
-  const vendor = store?.data;
-  const productList = products?.data ?? [];
+  const removeProduct = useMutation({
+    mutationFn: (id: number) => vendorApi.deleteProduct(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendor-products'] }),
+  });
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this product?')) return;
-    await vendorApi.deleteProduct(id);
-    refetchProducts();
-  };
+  const productList = products?.data ?? [];
+  const orderList = orders?.data ?? [];
 
   return (
-    <div className="page-container py-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h1 className="text-xl font-bold">Vendor Dashboard</h1>
-          {vendor && (
-            <p className="text-sm text-muted-foreground">{vendor.store_name} · {vendor.status}</p>
-          )}
-        </div>
-        <Button asChild size="sm">
-          <Link to="/vendor/products/new"><Plus className="h-4 w-4 mr-1" /> Add product</Link>
-        </Button>
+    <>
+      <PageHeader
+        title="Store overview"
+        description={store?.data ? `${store.data.store_name} · ${store.data.city ?? store.data.country}` : 'Manage your products and orders.'}
+        actions={
+          <Button asChild size="sm">
+            <Link to="/vendor/products/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Add product
+            </Link>
+          </Button>
+        }
+      />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Products" value={productList.length} icon={Package} />
+        <StatCard label="Orders" value={orderList.length} icon={ShoppingBag} />
+        <StatCard
+          label="Store status"
+          value={store?.data?.status ?? '—'}
+          icon={Store}
+        />
       </div>
 
-      {vendor?.status === 'pending' && (
-        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-          Your store is awaiting admin approval. You cannot add products until your store is approved.
-        </div>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-3 mb-6">
-        <div className="rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Products</p>
-          <p className="text-xl font-bold">{productList.length}</p>
-        </div>
-        <div className="rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Orders</p>
-          <p className="text-xl font-bold">{orders?.data?.length ?? 0}</p>
-        </div>
-        <div className="rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Rating</p>
-          <p className="text-xl font-bold">{vendor?.rating ?? 0} ⭐</p>
-        </div>
-      </div>
-
-      <h2 className="font-semibold text-sm mb-3">Your Products</h2>
-      {productList.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No products yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {productList.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-lg border border-border p-2">
-              <div className="h-14 w-14 shrink-0 rounded-md overflow-hidden bg-muted">
-                {p.images?.[0] && <img src={p.images[0].url} alt="" className="h-full w-full object-cover" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{p.name}</p>
-                <p className="text-xs text-muted-foreground">{formatCurrency(p.price)} · Stock: {p.stock} · {p.status}</p>
-              </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
-                  <Link to={`/vendor/products/${p.id}/edit`}><Pencil className="h-3.5 w-3.5" /></Link>
+      <div className="space-y-6">
+        <DashboardSection
+          title="Products"
+          description="Manage your catalog and inventory."
+          actions={
+            <Button asChild size="sm" variant="outline">
+              <Link to="/vendor/products/new">New product</Link>
+            </Button>
+          }
+        >
+          {productList.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="No products yet"
+              description="Add your first product to start selling."
+              action={
+                <Button asChild size="sm">
+                  <Link to="/vendor/products/new">Add product</Link>
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDelete(p.id)}>
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
-              </div>
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="pb-3 font-medium">Product</th>
+                    <th className="pb-3 font-medium">Price</th>
+                    <th className="pb-3 font-medium">Stock</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productList.map((product) => (
+                    <tr key={product.id} className="border-b border-border/70">
+                      <td className="py-3 pr-4">
+                        <p className="font-medium">{product.name}</p>
+                        {product.category && (
+                          <p className="text-xs text-muted-foreground">{product.category.name}</p>
+                        )}
+                      </td>
+                      <td className="py-3">{formatCurrency(product.price)}</td>
+                      <td className="py-3">{product.stock}</td>
+                      <td className="py-3">
+                        <StatusBadge status={product.status} />
+                      </td>
+                      <td className="py-3">
+                        <div className="flex gap-2">
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={`/vendor/products/${product.id}/edit`}>Edit</Link>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive"
+                            onClick={() => removeProduct.mutate(product.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
-        </div>
-      )}
+          )}
+        </DashboardSection>
 
-      <h2 className="font-semibold text-sm mt-8 mb-3">Storefront preview</h2>
-      <ProductGrid>
-        {productList.slice(0, 6).map((p) => <ProductCard key={p.id} product={p} />)}
-      </ProductGrid>
-    </div>
+        <DashboardSection title="Recent orders" description="Latest orders for your store.">
+          {orderList.length === 0 ? (
+            <EmptyState
+              icon={ShoppingBag}
+              title="No orders yet"
+              description="Orders from customers will appear here."
+            />
+          ) : (
+            <div className="space-y-3">
+              {orderList.slice(0, 5).map((order) => (
+                <div
+                  key={order.uuid}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-4"
+                >
+                  <div>
+                    <p className="font-medium">{order.order_number}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={order.status} />
+                    <p className="font-semibold">{formatCurrency(order.total)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DashboardSection>
+      </div>
+    </>
   );
 }

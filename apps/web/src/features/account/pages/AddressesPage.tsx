@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MapPin } from 'lucide-react';
 import { addressApi } from '@/lib/marketplaceApi';
 import type { Address } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EmptyState } from '@/components/dashboard/EmptyState';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 const emptyForm = {
   label: 'Home',
@@ -39,49 +43,88 @@ export function AddressesPage() {
   const addresses = data?.data ?? [];
 
   return (
-    <div className="page-container py-6 max-w-2xl">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">My Addresses</h1>
-        <Button size="sm" onClick={() => setShowForm((v) => !v)}>{showForm ? 'Cancel' : 'Add address'}</Button>
-      </div>
+    <>
+      <PageHeader
+        title="Addresses"
+        description="Save delivery addresses for faster checkout."
+        actions={
+          <Button size="sm" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? 'Cancel' : 'Add address'}
+          </Button>
+        }
+      />
 
       {showForm && (
         <form
-          onSubmit={(e) => { e.preventDefault(); create.mutate(); }}
-          className="rounded-xl border border-border p-4 mb-4 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            create.mutate();
+          }}
+          className="mb-6 space-y-3 rounded-xl border border-border bg-background p-5"
         >
           {(['label', 'full_name', 'phone', 'address_line_1', 'city', 'country'] as const).map((field) => (
             <div key={field}>
               <Label className="capitalize">{field.replace('_', ' ')}</Label>
-              <Input value={form[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })} required />
+              <Input
+                value={form[field]}
+                onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                required
+              />
             </div>
           ))}
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} />
+            <input
+              type="checkbox"
+              checked={form.is_default}
+              onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
+            />
             Set as default
           </label>
-          <Button type="submit" disabled={create.isPending}>Save address</Button>
+          <Button type="submit" disabled={create.isPending}>
+            Save address
+          </Button>
         </form>
       )}
 
       {isLoading ? (
-        <div className="h-24 rounded-lg bg-muted animate-pulse" />
+        <div className="h-24 animate-pulse rounded-xl bg-muted" />
       ) : addresses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No saved addresses.</p>
+        <EmptyState
+          icon={MapPin}
+          title="No saved addresses"
+          description="Add an address to speed up checkout."
+          action={
+            <Button size="sm" onClick={() => setShowForm(true)}>
+              Add address
+            </Button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {addresses.map((addr: Address) => (
-            <div key={addr.id} className="rounded-lg border border-border p-4 flex justify-between gap-3">
+            <div
+              key={addr.id}
+              className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:flex-row sm:items-start sm:justify-between"
+            >
               <div>
-                <p className="font-medium text-sm">{addr.label} {addr.is_default && <span className="text-primary text-xs">(Default)</span>}</p>
-                <p className="text-sm text-muted-foreground mt-1">{addr.full_name} · {addr.phone}</p>
-                <p className="text-sm">{addr.address_line_1}, {addr.city}, {addr.country}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{addr.label}</p>
+                  {addr.is_default && <StatusBadge status="default" />}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {addr.full_name} · {addr.phone}
+                </p>
+                <p className="text-sm">
+                  {addr.address_line_1}, {addr.city}, {addr.country}
+                </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => remove.mutate(addr.id)}>Delete</Button>
+              <Button size="sm" variant="outline" onClick={() => remove.mutate(addr.id)}>
+                Delete
+              </Button>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

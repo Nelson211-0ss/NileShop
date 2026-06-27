@@ -4,21 +4,44 @@ Multi-vendor e-commerce marketplace for South Sudan. All prices are in **SSP** (
 
 ## Quick start (Docker)
 
+### First-time setup (after clone)
+
+Run these in order on a fresh clone:
+
 ```bash
-# Start the full stack
+# 1. Environment files (not in git)
+cp .env.example .env
+cp backend/.env.example backend/.env
+
+# 2. Start the full stack
 docker compose up -d
 
-# First-time setup (or reset database)
+# 3. Install PHP dependencies (required — backend/vendor is gitignored)
+docker compose exec laravel composer install
+
+# 4. Generate application key
+docker compose exec laravel php artisan key:generate
+
+# 5. Create and seed the database
 docker compose exec laravel php artisan migrate --seed --force
 
-# Fix or refresh product images (after storage setup)
-docker compose exec laravel php artisan marketplace:refresh-product-images
-
-# Rebuild frontend after UI changes
+# 6. Build and start the frontend
 docker compose build react && docker compose up -d react
+
+# 7. Refresh product images (after storage is ready)
+docker compose exec laravel php artisan marketplace:refresh-product-images
 ```
 
 Open **http://localhost:8888** (default `NGINX_PORT` in `.env`).
+
+### Day-to-day commands
+
+```bash
+docker compose up -d                                              # Start all services
+docker compose exec laravel php artisan migrate --seed --force   # Reset database
+docker compose exec laravel php artisan marketplace:refresh-product-images
+docker compose build react && docker compose up -d react         # Rebuild frontend after UI changes
+```
 
 | Role | Email | Password |
 |------|-------|----------|

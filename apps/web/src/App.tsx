@@ -5,6 +5,10 @@ import { store } from '@/store';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ProtectedRoute, RoleRoute } from '@/components/ProtectedRoute';
+import { CustomerDashboardLayout } from '@/components/dashboard/CustomerDashboardLayout';
+import { VendorDashboardLayout } from '@/components/dashboard/VendorDashboardLayout';
+import { AdminDashboardLayout } from '@/components/dashboard/AdminDashboardLayout';
+import { RiderDashboardLayout } from '@/components/dashboard/RiderDashboardLayout';
 import { HomePage } from '@/features/home/pages/HomePage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
@@ -45,18 +49,31 @@ export function App() {
                 <Route path="/auth/register" element={<RegisterPage />} />
                 <Route path="/auth/vendor-register" element={<VendorRegisterPage />} />
                 <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-                <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-                <Route path="/orders/:uuid" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
-                <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-                <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
-                <Route path="/addresses" element={<ProtectedRoute><AddressesPage /></ProtectedRoute>} />
-                <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
-                <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/vendor" element={<RoleRoute roles={['vendor']}><VendorDashboardPage /></RoleRoute>} />
-                <Route path="/vendor/products/new" element={<RoleRoute roles={['vendor']}><VendorProductFormPage /></RoleRoute>} />
-                <Route path="/vendor/products/:id/edit" element={<RoleRoute roles={['vendor']}><VendorProductEditPage /></RoleRoute>} />
-                <Route path="/rider" element={<RoleRoute roles={['delivery_rider']}><RiderDashboardPage /></RoleRoute>} />
-                <Route path="/admin" element={<RoleRoute roles={['administrator']}><AdminDashboardPage /></RoleRoute>} />
+
+                <Route element={<ProtectedRoute><CustomerDashboardLayout /></ProtectedRoute>}>
+                  <Route path="/account" element={<AccountPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/orders/:uuid" element={<OrderDetailPage />} />
+                  <Route path="/wallet" element={<WalletPage />} />
+                  <Route path="/addresses" element={<AddressesPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                </Route>
+
+                <Route element={<RoleRoute roles={['vendor']}><VendorDashboardLayout /></RoleRoute>}>
+                  <Route path="/vendor" element={<VendorDashboardPage />} />
+                  <Route path="/vendor/products/new" element={<VendorProductFormPage />} />
+                  <Route path="/vendor/products/:id/edit" element={<VendorProductEditPage />} />
+                </Route>
+
+                <Route element={<RoleRoute roles={['delivery_rider']}><RiderDashboardLayout /></RoleRoute>}>
+                  <Route path="/rider" element={<RiderDashboardPage />} />
+                </Route>
+
+                <Route element={<RoleRoute roles={['administrator']}><AdminDashboardLayout /></RoleRoute>}>
+                  <Route path="/admin" element={<AdminDashboardPage />} />
+                </Route>
+
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>
