@@ -79,11 +79,11 @@ export function HeaderSearch({ className, mobileOpen, onMobileOpenChange }: Head
     }
   };
 
-  const searchField = (
-    <div className="relative w-full">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+  const searchBar = (
+    <div className="flex w-full items-center overflow-hidden rounded-lg border border-border bg-card shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
+      <Search className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
       <Input
-        className="h-10 pr-9 pl-10"
+        className="h-10 min-w-0 flex-1 border-0 bg-transparent px-2 py-2 shadow-none focus-visible:ring-0"
         placeholder="Search products..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -92,19 +92,22 @@ export function HeaderSearch({ className, mobileOpen, onMobileOpenChange }: Head
         <button
           type="button"
           onClick={clearSearch}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />
         </button>
       )}
+      <Button type="submit" size="sm" className="mr-1 h-8 shrink-0 rounded-md px-3">
+        Search
+      </Button>
     </div>
   );
 
   return (
     <div className={cn('relative min-w-0', className)}>
-      <form onSubmit={submitSearch} className="hidden min-w-0 flex-1 md:flex">
-        <div className="w-full max-w-xl">{searchField}</div>
+      <form onSubmit={submitSearch} className="hidden min-w-0 flex-1 md:block">
+        <div className="max-w-xl">{searchBar}</div>
       </form>
 
       <div className="flex flex-1 justify-end md:hidden">
@@ -129,12 +132,7 @@ export function HeaderSearch({ className, mobileOpen, onMobileOpenChange }: Head
             onClick={() => onMobileOpenChange(false)}
           />
           <div className="fixed inset-x-0 top-14 z-50 border-b border-border bg-card px-4 py-3 shadow-sm sm:top-16 md:hidden">
-            <form onSubmit={submitSearch} className="flex gap-2">
-              <div className="min-w-0 flex-1">{searchField}</div>
-              <Button type="submit" size="sm" className="shrink-0">
-                Search
-              </Button>
-            </form>
+            <form onSubmit={submitSearch}>{searchBar}</form>
           </div>
         </>
       )}
