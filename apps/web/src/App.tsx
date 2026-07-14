@@ -24,9 +24,20 @@ import { WalletPage } from '@/features/account/pages/WalletPage';
 import { AddressesPage } from '@/features/account/pages/AddressesPage';
 import { WishlistPage } from '@/features/wishlist/pages/WishlistPage';
 import { VendorDashboardPage } from '@/features/vendor/pages/VendorDashboardPage';
+import { VendorOrdersPage } from '@/features/vendor/pages/VendorOrdersPage';
 import { VendorProductFormPage } from '@/features/vendor/pages/VendorProductFormPage';
 import { VendorProductEditPage } from '@/features/vendor/pages/VendorProductEditPage';
 import { AdminDashboardPage } from '@/features/admin/pages/AdminDashboardPage';
+import { AdminOrdersPage } from '@/features/admin/pages/AdminOrdersPage';
+import { AdminProductsPage } from '@/features/admin/pages/AdminProductsPage';
+import { AdminVendorsPage } from '@/features/admin/pages/AdminVendorsPage';
+import { AdminVendorLocationsPage } from '@/features/admin/pages/AdminVendorLocationsPage';
+import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
+import { AdminCustomersPage } from '@/features/admin/pages/AdminCustomersPage';
+import { AdminDeliveriesPage } from '@/features/admin/pages/AdminDeliveriesPage';
+import { AdminReportsPage } from '@/features/admin/pages/AdminReportsPage';
+import { AdminBannersPage } from '@/features/admin/pages/AdminBannersPage';
+import { AdminSettingsPage } from '@/features/admin/pages/AdminSettingsPage';
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage';
 import { MessagesPage } from '@/features/messages/pages/MessagesPage';
 import { VendorMessagesPage } from '@/features/vendor/pages/VendorMessagesPage';
@@ -68,6 +79,7 @@ export function App() {
 
                 <Route element={<ProtectedRoute><RoleRoute roles={['vendor']}><VendorDashboardLayout /></RoleRoute></ProtectedRoute>}>
                   <Route path="/vendor" element={<VendorDashboardPage />} />
+                  <Route path="/vendor/orders" element={<VendorOrdersPage />} />
                   <Route path="/vendor/messages" element={<VendorMessagesPage />} />
                   <Route path="/vendor/messages/:id" element={<VendorMessagesPage />} />
                   <Route path="/vendor/products/new" element={<VendorProductFormPage />} />
@@ -80,6 +92,16 @@ export function App() {
 
                 <Route element={<RoleRoute roles={['administrator']}><AdminDashboardLayout /></RoleRoute>}>
                   <Route path="/admin" element={<AdminDashboardPage />} />
+                  <Route path="/admin/orders" element={<AdminOrdersPage />} />
+                  <Route path="/admin/products" element={<AdminProductsPage />} />
+                  <Route path="/admin/vendors" element={<AdminVendorsPage />} />
+                  <Route path="/admin/locations" element={<AdminVendorLocationsPage />} />
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/customers" element={<AdminCustomersPage />} />
+                  <Route path="/admin/deliveries" element={<AdminDeliveriesPage />} />
+                  <Route path="/admin/reports" element={<AdminReportsPage />} />
+                  <Route path="/admin/banners" element={<AdminBannersPage />} />
+                  <Route path="/admin/settings" element={<AdminSettingsPage />} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/" replace />} />

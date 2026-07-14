@@ -1,8 +1,9 @@
-import { LayoutDashboard, MessageCircle, Plus, User } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, Plus, ShoppingBag, User } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 const vendorNav = [
   { to: '/vendor', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/vendor/orders', label: 'Orders', icon: ShoppingBag },
   { to: '/vendor/messages', label: 'Messages', icon: MessageCircle },
   { to: '/vendor/products/new', label: 'Add product', icon: Plus },
 ];

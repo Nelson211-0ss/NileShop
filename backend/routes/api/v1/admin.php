@@ -14,6 +14,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::post('vendors/{vendor}/approve', [AdminController::class, 'approveVendor'])->name('vendors.approve');
     Route::post('vendors/{vendor}/reject', [AdminController::class, 'rejectVendor'])->name('vendors.reject');
     Route::get('users', [AdminController::class, 'users'])->name('users');
+    Route::get('customers', [AdminController::class, 'customers'])->name('customers');
     Route::get('orders', [AdminController::class, 'orders'])->name('orders');
     Route::put('orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('orders.status');
     Route::get('products', [AdminController::class, 'products'])->name('products');

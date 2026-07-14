@@ -41,11 +41,31 @@ class AdminController extends Controller
         $vendors = Vendor::with('user')
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate($request->integer('per_page', 20));
 
         return ApiResponse::success(
             VendorResource::collection($vendors),
             meta: ['total' => $vendors->total()]
+        );
+    }
+
+    public function customers(Request $request): JsonResponse
+    {
+        $customers = $this->adminService->customerActivity($request->search, $request->integer('per_page', 20));
+
+        return ApiResponse::success(
+            collect($customers->items())->map(fn (User $u) => [
+                'uuid' => $u->uuid,
+                'name' => $u->name,
+                'email' => $u->email,
+                'phone' => $u->phone,
+                'order_count' => $u->orders_count,
+                'total_spent' => (float) ($u->orders_sum_total ?? 0),
+                'last_order_at' => $u->orders_max_created_at,
+                'last_login_at' => $u->last_login_at?->toIso8601String(),
+                'created_at' => $u->created_at?->toIso8601String(),
+            ]),
+            meta: ['total' => $customers->total()]
         );
     }
 

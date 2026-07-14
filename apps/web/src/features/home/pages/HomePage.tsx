@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Clock, Star } from 'lucide-react';
 import { homeApi } from '@/lib/marketplaceApi';
-import { ProductCard } from '@/components/product/ProductCard';
-import { ProductGrid, ProductGridSkeleton } from '@/components/product/ProductGrid';
+import { ProductGridSkeleton } from '@/components/product/ProductGrid';
+import { ProductCarousel } from '@/components/product/ProductCarousel';
 import { ProductBrowseSection } from '@/components/catalog/ProductBrowseSection';
+import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { Button } from '@/components/ui/button';
 
 export function HomePage() {
@@ -16,26 +17,30 @@ export function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10">
-        <div className="page-container py-16 lg:py-24">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Shop smarter across <span className="text-primary">South Sudan</span>
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Thousands of products from trusted vendors. Prices in SSP. Fast delivery in Juba.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <Button size="lg" asChild>
-                <Link to="/#browse">Browse products</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/auth/vendor-register">Sell on NileShop</Link>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {home?.banners?.length ? (
+        <BannerCarousel banners={home.banners} />
+      ) : (
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10">
+          <div className="page-container py-16 lg:py-24">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                Shop smarter across <span className="text-primary">South Sudan</span>
+              </h1>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Thousands of products from trusted vendors. Prices in SSP. Fast delivery in Juba.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <Button size="lg" asChild>
+                  <Link to="/#browse">Browse products</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/auth/vendor-register">Sell on NileShop</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Browse + filters */}
       <div className="page-container py-10 lg:py-12">
@@ -61,11 +66,7 @@ export function HomePage() {
                 </Link>
               </Button>
             </div>
-            <ProductGrid>
-              {home.flash_sale.products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </ProductGrid>
+            <ProductCarousel products={home.flash_sale.products} />
           </div>
         </section>
       )}
@@ -78,22 +79,14 @@ export function HomePage() {
         {isLoading ? (
           <ProductGridSkeleton count={6} />
         ) : (
-          <ProductGrid>
-            {home?.featured_products?.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </ProductGrid>
+          <ProductCarousel products={home?.featured_products ?? []} />
         )}
       </section>
 
       {/* Best Sellers */}
       <section className="page-container pb-12">
         <h2 className="mb-6 text-2xl font-bold">Best Sellers</h2>
-        <ProductGrid>
-          {home?.best_sellers?.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </ProductGrid>
+        <ProductCarousel products={home?.best_sellers ?? []} />
       </section>
     </div>
   );

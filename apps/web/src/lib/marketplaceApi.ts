@@ -11,6 +11,9 @@ import type {
   WalletData,
   Vendor,
   AdminDashboard,
+  SalesReport,
+  Banner,
+  CustomerActivity,
   PaymentGateway,
 } from '@nileshop/types';
 
@@ -85,7 +88,8 @@ export const vendorApi = {
   get: (slug: string) => api.get<ApiResponse<Vendor>>(`/vendors/${slug}`).then((r) => r.data),
   products: (slug: string) => api.get<ApiResponse<Product[]>>(`/vendors/${slug}/products`).then((r) => r.data),
   myStore: () => api.get<ApiResponse<Vendor>>('/vendor/store').then((r) => r.data),
-  myOrders: () => api.get<ApiResponse<Order[]>>('/vendor/orders').then((r) => r.data),
+  myOrders: (page?: number) =>
+    api.get<ApiResponse<Order[]>>('/vendor/orders', { params: { page } }).then((r) => r.data),
   myProducts: () => api.get<ApiResponse<Product[]>>('/vendor/products').then((r) => r.data),
   getProduct: (id: number) => api.get<ApiResponse<Product>>(`/vendor/products/${id}`).then((r) => r.data),
   createProduct: (data: Record<string, unknown>) => api.post<ApiResponse<Product>>('/vendor/products', data).then((r) => r.data),
@@ -95,23 +99,56 @@ export const vendorApi = {
 
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<AdminDashboard>>('/admin/dashboard').then((r) => r.data),
-  vendors: (status?: string) => api.get<ApiResponse<Vendor[]>>('/admin/vendors', { params: { status } }).then((r) => r.data),
+  reports: (days?: number) =>
+    api.get<ApiResponse<SalesReport>>('/admin/reports', { params: { days } }).then((r) => r.data),
+  vendors: (status?: string, page?: number, perPage?: number) =>
+    api
+      .get<ApiResponse<Vendor[]>>('/admin/vendors', { params: { status, page, per_page: perPage } })
+      .then((r) => r.data),
   approveVendor: (id: number) => api.post(`/admin/vendors/${id}/approve`),
   rejectVendor: (id: number) => api.post(`/admin/vendors/${id}/reject`),
-  orders: () => api.get<ApiResponse<Order[]>>('/admin/orders').then((r) => r.data),
-  products: () => api.get<ApiResponse<Product[]>>('/admin/products').then((r) => r.data),
-  users: () => api.get<ApiResponse<import('@nileshop/types').User[]>>('/admin/users').then((r) => r.data),
-  deliveries: () => api.get<ApiResponse<AdminDelivery[]>>('/admin/deliveries').then((r) => r.data),
+  orders: (status?: string, page?: number) =>
+    api.get<ApiResponse<Order[]>>('/admin/orders', { params: { status, page } }).then((r) => r.data),
+  updateOrderStatus: (uuid: string, status: string, note?: string) =>
+    api.put<ApiResponse<Order>>(`/admin/orders/${uuid}/status`, { status, note }).then((r) => r.data),
+  products: (status?: string, page?: number) =>
+    api.get<ApiResponse<Product[]>>('/admin/products', { params: { status, page } }).then((r) => r.data),
+  users: (search?: string, page?: number) =>
+    api
+      .get<ApiResponse<import('@nileshop/types').User[]>>('/admin/users', { params: { search, page } })
+      .then((r) => r.data),
+  customers: (search?: string, page?: number) =>
+    api
+      .get<ApiResponse<CustomerActivity[]>>('/admin/customers', { params: { search, page } })
+      .then((r) => r.data),
+  deliveries: (status?: string, page?: number) =>
+    api.get<ApiResponse<AdminDelivery[]>>('/admin/deliveries', { params: { status, page } }).then((r) => r.data),
   riders: () => api.get<ApiResponse<AdminRider[]>>('/admin/deliveries/riders').then((r) => r.data),
   assignDelivery: (uuid: string, riderId: number) =>
     api.post(`/admin/deliveries/${uuid}/assign`, { rider_id: riderId }),
+  banners: {
+    list: () => api.get<ApiResponse<Banner[]>>('/admin/banners').then((r) => r.data),
+    create: (data: Partial<Banner>) => api.post<ApiResponse<Banner>>('/admin/banners', data).then((r) => r.data),
+    update: (id: number, data: Partial<Banner>) =>
+      api.put<ApiResponse<Banner>>(`/admin/banners/${id}`, data).then((r) => r.data),
+    delete: (id: number) => api.delete(`/admin/banners/${id}`),
+  },
+  settings: () =>
+    api.get<ApiResponse<Record<string, Record<string, string>>>>('/settings').then((r) => r.data),
+  updateSettings: (settings: Record<string, string>) =>
+    api.put<ApiResponse<null>>('/admin/cms/settings', { settings }).then((r) => r.data),
 };
 
 interface AdminDelivery {
   uuid: string;
   status: string;
-  order?: { order_number: string };
-  rider?: { id: number; name: string };
+  earnings: number;
+  created_at: string;
+  assigned_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
+  order?: { order_number: string; total: number };
+  rider?: { id: number; name: string; phone?: string };
 }
 
 interface AdminRider {

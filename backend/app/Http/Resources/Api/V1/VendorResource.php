@@ -21,6 +21,7 @@ class VendorResource extends JsonResource
             'rating' => $this->rating,
             'total_reviews' => $this->total_reviews,
             'is_featured' => $this->is_featured,
+            'address' => $this->address,
             'city' => $this->city,
             'country' => $this->country,
             'contact_phone' => $this->contact_phone,

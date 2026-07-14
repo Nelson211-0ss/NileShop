@@ -29,6 +29,19 @@ class AdminService
         ];
     }
 
+    public function customerActivity(?string $search, int $perPage = 20)
+    {
+        return User::role('customer')
+            ->when($search, fn ($q, $s) => $q->where(fn ($qq) => $qq
+                ->where('name', 'like', "%{$s}%")
+                ->orWhere('email', 'like', "%{$s}%")))
+            ->withCount('orders')
+            ->withSum('orders', 'total')
+            ->withMax('orders', 'created_at')
+            ->orderByDesc('orders_sum_total')
+            ->paginate($perPage);
+    }
+
     public function salesReport(int $days = 30): array
     {
         $sales = Order::where('payment_status', 'paid')

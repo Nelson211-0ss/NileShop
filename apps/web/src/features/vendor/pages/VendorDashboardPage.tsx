@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Package, Plus, ShoppingBag, Store } from 'lucide-react';
+import { MessageCircle, Package, Plus, ShoppingBag, Store, Wallet } from 'lucide-react';
 import { conversationApi, vendorApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ export function VendorDashboardPage() {
   const queryClient = useQueryClient();
   const { data: store } = useQuery({ queryKey: ['vendor-store'], queryFn: vendorApi.myStore });
   const { data: products } = useQuery({ queryKey: ['vendor-products'], queryFn: vendorApi.myProducts });
-  const { data: orders } = useQuery({ queryKey: ['vendor-orders'], queryFn: vendorApi.myOrders });
+  const { data: orders } = useQuery({ queryKey: ['vendor-orders'], queryFn: () => vendorApi.myOrders() });
   const { data: conversations } = useQuery({
     queryKey: ['vendor-conversations'],
     queryFn: conversationApi.vendorList,
@@ -30,6 +30,9 @@ export function VendorDashboardPage() {
   const orderList = orders?.data ?? [];
   const messageList = Array.isArray(conversations?.data) ? conversations.data : [];
   const unreadMessages = messageList.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
+  const revenue = orderList
+    .filter((o) => o.payment_status === 'paid')
+    .reduce((sum, o) => sum + o.total, 0);
 
   return (
     <>
@@ -63,9 +66,10 @@ export function VendorDashboardPage() {
         }
       />
 
-      <StatGrid className="sm:grid-cols-3 lg:grid-cols-3">
+      <StatGrid className="sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Products" value={productList.length} icon={Package} />
         <StatCard label="Orders" value={orderList.length} icon={ShoppingBag} />
+        <StatCard label="Revenue" value={formatCurrency(revenue)} icon={Wallet} hint="From paid orders" />
         <StatCard label="Store status" value={store?.data?.status ?? '—'} icon={Store} />
       </StatGrid>
 
@@ -177,7 +181,16 @@ export function VendorDashboardPage() {
           )}
         </DashboardSection>
 
-        <DashboardSection title="Recent orders">
+        <DashboardSection
+          title="Recent orders"
+          actions={
+            orderList.length > 0 ? (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/vendor/orders">View all</Link>
+              </Button>
+            ) : undefined
+          }
+        >
           {orderList.length === 0 ? (
             <EmptyState icon={ShoppingBag} title="No orders yet" />
           ) : (

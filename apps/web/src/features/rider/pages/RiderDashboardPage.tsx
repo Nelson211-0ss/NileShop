@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, MapPin, Truck, Wallet } from 'lucide-react';
+import { Check, CheckCircle2, MapPin, Truck, Wallet } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
 import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
@@ -18,8 +19,43 @@ interface Delivery {
   order?: { order_number: string; shipping_address?: Record<string, string> };
 }
 
+const STEPS = [
+  { key: 'assigned', label: 'Assigned' },
+  { key: 'picked_up', label: 'Picked up' },
+  { key: 'delivered', label: 'Delivered' },
+];
+
+function DeliverySteps({ status }: { status: string }) {
+  const currentIndex = STEPS.findIndex((s) => s.key === status);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {STEPS.map((step, i) => {
+        const done = currentIndex >= 0 && i <= currentIndex;
+        return (
+          <div key={step.key} className="flex items-center gap-1.5">
+            <div
+              className={cn(
+                'flex h-5 w-5 items-center justify-center rounded-full border text-[10px]',
+                done ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground',
+              )}
+            >
+              {done ? <Check className="h-3 w-3" /> : i + 1}
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={cn('h-0.5 w-6', done && i < currentIndex ? 'bg-primary' : 'bg-border')} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function RiderDashboardPage() {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState<'active' | 'completed'>('active');
+
   const { data: deliveries } = useQuery({
     queryKey: ['rider-deliveries'],
     queryFn: () => api.get<ApiResponse<Delivery[]>>('/rider/deliveries').then((r) => r.data),
@@ -67,6 +103,11 @@ export function RiderDashboardPage() {
     queryClient.invalidateQueries({ queryKey: ['rider-earnings'] });
   };
 
+  const allDeliveries = deliveries?.data ?? [];
+  const activeDeliveries = allDeliveries.filter((d) => d.status !== 'delivered');
+  const completedDeliveries = allDeliveries.filter((d) => d.status === 'delivered');
+  const visibleDeliveries = tab === 'active' ? activeDeliveries : completedDeliveries;
+
   return (
     <>
       <PageHeader
@@ -82,12 +123,28 @@ export function RiderDashboardPage() {
         </StatGrid>
       )}
 
-      <DashboardSection title="Assigned deliveries">
-        {!deliveries?.data?.length ? (
-          <EmptyState icon={Truck} title="No active deliveries" />
+      <div className="mb-6 flex gap-1 rounded-lg border border-border bg-card p-1">
+        {(['active', 'completed'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors',
+              tab === t ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t} ({t === 'active' ? activeDeliveries.length : completedDeliveries.length})
+          </button>
+        ))}
+      </div>
+
+      <DashboardSection title={tab === 'active' ? 'Active deliveries' : 'Completed deliveries'}>
+        {visibleDeliveries.length === 0 ? (
+          <EmptyState icon={Truck} title={tab === 'active' ? 'No active deliveries' : 'No completed deliveries yet'} />
         ) : (
           <ListShell>
-            {deliveries.data.map((d) => (
+            {visibleDeliveries.map((d) => (
               <ListRow key={d.uuid}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -101,6 +158,9 @@ export function RiderDashboardPage() {
                         {d.order.shipping_address.address_line_1}, {d.order.shipping_address.city}
                       </p>
                     )}
+                    <div className="mt-2.5">
+                      <DeliverySteps status={d.status} />
+                    </div>
                     <div className="mt-2 flex gap-2">
                       {d.status === 'assigned' && (
                         <Button size="sm" onClick={() => pickup(d.uuid)}>

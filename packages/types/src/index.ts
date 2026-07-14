@@ -63,10 +63,23 @@ export interface Vendor {
   rating: number;
   total_reviews: number;
   is_featured: boolean;
+  address?: string | null;
   city: string | null;
   country: string;
   contact_phone?: string | null;
   contact_email?: string | null;
+}
+
+export interface CustomerActivity {
+  uuid: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  order_count: number;
+  total_spent: number;
+  last_order_at: string | null;
+  last_login_at: string | null;
+  created_at: string;
 }
 
 export interface ChatMessage {
@@ -245,6 +258,8 @@ export interface Banner {
   image: string;
   link?: string;
   position: string;
+  sort_order: number;
+  is_active: boolean;
 }
 
 export interface HomeData {
@@ -278,8 +293,28 @@ export interface AdminDashboard {
   published_products: number;
   total_orders: number;
   pending_orders: number;
+  active_deliveries: number;
   revenue_today: number;
   revenue_month: number;
+}
+
+export interface SalesReportPoint {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+export interface TopProduct {
+  name: string;
+  total_sales: number;
+  price: number;
+}
+
+export interface SalesReport {
+  daily_sales: SalesReportPoint[];
+  top_products: TopProduct[];
+  total_revenue: number;
+  total_orders: number;
 }
 
 export type PaymentGateway = 'cash_on_delivery' | 'bank_transfer' | 'mobile_money' | 'wallet' | 'card';
