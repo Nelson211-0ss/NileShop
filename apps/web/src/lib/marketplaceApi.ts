@@ -117,6 +117,15 @@ export const adminApi = {
     api
       .get<ApiResponse<import('@nileshop/types').User[]>>('/admin/users', { params: { search, page } })
       .then((r) => r.data),
+  deactivateUser: (uuid: string) =>
+    api
+      .post<ApiResponse<import('@nileshop/types').User>>(`/admin/users/${uuid}/deactivate`)
+      .then((r) => r.data),
+  reactivateUser: (uuid: string) =>
+    api
+      .post<ApiResponse<import('@nileshop/types').User>>(`/admin/users/${uuid}/reactivate`)
+      .then((r) => r.data),
+  deleteUser: (uuid: string) => api.delete<ApiResponse<null>>(`/admin/users/${uuid}`).then((r) => r.data),
   customers: (search?: string, page?: number) =>
     api
       .get<ApiResponse<CustomerActivity[]>>('/admin/customers', { params: { search, page } })

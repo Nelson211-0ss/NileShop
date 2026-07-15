@@ -22,6 +22,7 @@ class UserResource extends JsonResource
             'email_verified' => $this->hasVerifiedEmail(),
             'phone_verified' => $this->phone_verified_at !== null,
             'two_factor_enabled' => $this->two_factor_enabled,
+            'is_active' => $this->is_active,
             'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

@@ -12,6 +12,7 @@ export interface User {
   email_verified: boolean;
   phone_verified: boolean;
   two_factor_enabled: boolean;
+  is_active: boolean;
   roles: UserRole[];
   created_at: string;
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AdminController;
+use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\Review\ReviewController;
 use App\Http\Controllers\Api\V1\Delivery\AdminDeliveryController;
 use App\Http\Controllers\Api\V1\Cms\CmsController;
@@ -14,6 +15,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::post('vendors/{vendor}/approve', [AdminController::class, 'approveVendor'])->name('vendors.approve');
     Route::post('vendors/{vendor}/reject', [AdminController::class, 'rejectVendor'])->name('vendors.reject');
     Route::get('users', [AdminController::class, 'users'])->name('users');
+    Route::post('users/{user:uuid}/deactivate', [AdminUserController::class, 'deactivate'])->name('users.deactivate');
+    Route::post('users/{user:uuid}/reactivate', [AdminUserController::class, 'reactivate'])->name('users.reactivate');
+    Route::delete('users/{user:uuid}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::get('customers', [AdminController::class, 'customers'])->name('customers');
     Route::get('orders', [AdminController::class, 'orders'])->name('orders');
     Route::put('orders/{order}/status', [AdminController::class, 'updateOrderStatus'])->name('orders.status');
