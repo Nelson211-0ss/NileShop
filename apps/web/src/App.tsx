@@ -13,6 +13,7 @@ import { RiderDashboardLayout } from '@/components/dashboard/RiderDashboardLayou
 import { HomePage } from '@/features/home/pages/HomePage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { AuthCallbackPage } from '@/features/auth/pages/AuthCallbackPage';
 import { VendorRegisterPage } from '@/features/auth/pages/VendorRegisterPage';
 import { ProductsPage } from '@/features/products/pages/ProductsPage';
 import { ProductDetailPage } from '@/features/products/pages/ProductDetailPage';
@@ -62,6 +63,7 @@ export function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/auth/login" element={<LoginPage />} />
                 <Route path="/auth/register" element={<RegisterPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/auth/vendor-register" element={<VendorRegisterPage />} />
                 <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
 

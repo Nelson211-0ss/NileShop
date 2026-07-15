@@ -1,5 +1,5 @@
-import { LayoutDashboard, MessageCircle, Plus, ShoppingBag, User } from 'lucide-react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { LayoutDashboard, MessageCircle, Plus, ShoppingBag, Store, User } from 'lucide-react';
+import { AppDashboardLayout } from '@/components/dashboard/AppDashboardLayout';
 
 const vendorNav = [
   { to: '/vendor', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -9,16 +9,10 @@ const vendorNav = [
 ];
 
 const vendorFooterNav = [
+  { to: '/', label: 'Back to shop', icon: Store, end: true },
   { to: '/account', label: 'Customer account', icon: User, end: true },
 ];
 
 export function VendorDashboardLayout() {
-  return (
-    <DashboardLayout
-      title="Vendor"
-      subtitle="Manage your store"
-      nav={vendorNav}
-      footerNav={vendorFooterNav}
-    />
-  );
+  return <AppDashboardLayout title="Vendor Dashboard" nav={vendorNav} footerNav={vendorFooterNav} />;
 }

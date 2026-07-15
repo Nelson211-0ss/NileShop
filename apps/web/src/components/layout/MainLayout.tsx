@@ -4,8 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { cn } from '@/lib/utils';
 
-const NO_HEADER_PREFIXES = ['/auth/login', '/auth/register'];
-const NO_FOOTER_PREFIXES = ['/vendor', '/admin', '/rider', '/auth/login', '/auth/register'];
+const NO_SITE_CHROME_PREFIXES = ['/vendor', '/admin', '/rider', '/auth/login', '/auth/register', '/auth/callback'];
 
 function matchesPrefix(pathname: string, prefixes: string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -13,17 +12,16 @@ function matchesPrefix(pathname: string, prefixes: string[]) {
 
 export function MainLayout() {
   const { pathname } = useLocation();
-  const showHeader = !matchesPrefix(pathname, NO_HEADER_PREFIXES);
-  const showFooterChrome = !matchesPrefix(pathname, NO_FOOTER_PREFIXES);
+  const showSiteChrome = !matchesPrefix(pathname, NO_SITE_CHROME_PREFIXES);
 
   return (
-    <div className={cn('flex min-h-screen flex-col', showFooterChrome && 'pb-16 md:pb-0')}>
-      {showHeader && <Header />}
+    <div className={cn('flex min-h-screen flex-col', showSiteChrome && 'pb-16 md:pb-0')}>
+      {showSiteChrome && <Header />}
       <main className="flex-1">
         <Outlet />
       </main>
-      {showFooterChrome && <Footer />}
-      {showFooterChrome && <BottomNav />}
+      {showSiteChrome && <Footer />}
+      {showSiteChrome && <BottomNav />}
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { AppDashboardLayout } from '@/components/dashboard/AppDashboardLayout';
 
 const adminNav = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -25,20 +25,13 @@ const adminNav = [
   { to: '/admin/deliveries', label: 'Deliveries', icon: Truck },
   { to: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { to: '/admin/banners', label: 'Banners', icon: Image },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 const adminFooterNav = [
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
   { to: '/account', label: 'Customer account', icon: User, end: true },
 ];
 
 export function AdminDashboardLayout() {
-  return (
-    <DashboardLayout
-      title="Administration"
-      subtitle="Platform management"
-      nav={adminNav}
-      footerNav={adminFooterNav}
-    />
-  );
+  return <AppDashboardLayout title="Dashboard" nav={adminNav} footerNav={adminFooterNav} />;
 }

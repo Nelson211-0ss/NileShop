@@ -1,12 +1,20 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::post('register', [AuthController::class, 'register'])->name('register');
     Route::post('vendor/register', [AuthController::class, 'registerVendor'])->name('vendor.register');
     Route::post('login', [AuthController::class, 'login'])->name('login');
+
+    Route::get('{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->whereIn('provider', ['google', 'apple'])
+        ->name('social.redirect');
+    Route::match(['get', 'post'], '{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->whereIn('provider', ['google', 'apple'])
+        ->name('social.callback');
     Route::post('otp/send', [AuthController::class, 'sendOtp'])->name('otp.send');
     Route::post('otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, CheckCircle2, MapPin, Truck, Wallet } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
+import { CardMenu } from '@/components/dashboard/CardMenu';
+import { DashboardCard, DashboardCardContent, DashboardCardHeader } from '@/components/dashboard/DashboardCard';
 import { cn } from '@/lib/utils';
-import { DashboardSection } from '@/components/dashboard/DashboardSection';
 import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { StatCard, StatGrid } from '@/components/dashboard/StatCard';
 import { StatusBadge } from '@/components/dashboard/StatusBadge';
 import { formatCurrency } from '@nileshop/utils';
@@ -16,6 +18,7 @@ interface Delivery {
   uuid: string;
   status: string;
   earnings: number;
+  delivered_at?: string | null;
   order?: { order_number: string; shipping_address?: Record<string, string> };
 }
 
@@ -108,6 +111,23 @@ export function RiderDashboardPage() {
   const completedDeliveries = allDeliveries.filter((d) => d.status === 'delivered');
   const visibleDeliveries = tab === 'active' ? activeDeliveries : completedDeliveries;
 
+  const earningsTrend = useMemo(() => {
+    const byDate = new Map<string, { revenue: number; orders: number }>();
+    completedDeliveries
+      .filter((d) => d.delivered_at)
+      .forEach((d) => {
+        const date = (d.delivered_at as string).slice(0, 10);
+        const entry = byDate.get(date) ?? { revenue: 0, orders: 0 };
+        entry.revenue += d.earnings;
+        entry.orders += 1;
+        byDate.set(date, entry);
+      });
+
+    return Array.from(byDate.entries())
+      .map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [completedDeliveries]);
+
   return (
     <>
       <PageHeader
@@ -116,71 +136,96 @@ export function RiderDashboardPage() {
       />
 
       {earnings?.data && (
-        <StatGrid className="sm:grid-cols-3 lg:grid-cols-3">
-          <StatCard label="Today" value={formatCurrency(earnings.data.today_earnings)} icon={Wallet} />
-          <StatCard label="Total earnings" value={formatCurrency(earnings.data.total_earnings)} icon={Wallet} />
-          <StatCard label="Completed" value={earnings.data.completed_deliveries} icon={CheckCircle2} />
+        <StatGrid>
+          <StatCard label="Today" value={formatCurrency(earnings.data.today_earnings)} icon={Wallet} tone="accent" />
+          <StatCard
+            label="Total earnings"
+            value={formatCurrency(earnings.data.total_earnings)}
+            icon={Wallet}
+            tone="primary"
+          />
+          <StatCard label="Completed" value={earnings.data.completed_deliveries} icon={CheckCircle2} tone="primary" />
+          <StatCard label="Active" value={activeDeliveries.length} icon={Truck} tone="primary" />
         </StatGrid>
       )}
 
-      <div className="mb-6 flex gap-1 rounded-lg border border-border bg-card p-1">
-        {(['active', 'completed'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors',
-              tab === t ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t} ({t === 'active' ? activeDeliveries.length : completedDeliveries.length})
-          </button>
-        ))}
-      </div>
+      <DashboardCard className="mb-5">
+        <DashboardCardHeader
+          title="Earnings from completed deliveries"
+          action={<CardMenu queryKey={['rider-deliveries']} />}
+        />
+        <DashboardCardContent>
+          {earningsTrend.length > 0 ? (
+            <RevenueChart data={earningsTrend} />
+          ) : (
+            <EmptyState icon={Wallet} title="No completed deliveries yet" />
+          )}
+        </DashboardCardContent>
+      </DashboardCard>
 
-      <DashboardSection title={tab === 'active' ? 'Active deliveries' : 'Completed deliveries'}>
-        {visibleDeliveries.length === 0 ? (
-          <EmptyState icon={Truck} title={tab === 'active' ? 'No active deliveries' : 'No completed deliveries yet'} />
-        ) : (
-          <ListShell>
-            {visibleDeliveries.map((d) => (
-              <ListRow key={d.uuid}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{d.order?.order_number}</p>
-                      <StatusBadge status={d.status} />
-                    </div>
-                    {d.order?.shipping_address && (
-                      <p className="mt-1 flex items-start gap-2 text-sm text-muted-foreground">
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                        {d.order.shipping_address.address_line_1}, {d.order.shipping_address.city}
-                      </p>
-                    )}
-                    <div className="mt-2.5">
-                      <DeliverySteps status={d.status} />
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      {d.status === 'assigned' && (
-                        <Button size="sm" onClick={() => pickup(d.uuid)}>
-                          Mark picked up
-                        </Button>
-                      )}
-                      {d.status === 'picked_up' && (
-                        <Button size="sm" onClick={() => complete(d.uuid)}>
-                          Mark delivered
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <p className="font-semibold">{formatCurrency(d.earnings)}</p>
-                </div>
-              </ListRow>
+      <DashboardCard>
+        <DashboardCardContent className="pt-4">
+          <div className="mb-5 flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
+            {(['active', 'completed'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors',
+                  tab === t ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {t} ({t === 'active' ? activeDeliveries.length : completedDeliveries.length})
+              </button>
             ))}
-          </ListShell>
-        )}
-      </DashboardSection>
+          </div>
+
+          {visibleDeliveries.length === 0 ? (
+            <EmptyState
+              icon={Truck}
+              title={tab === 'active' ? 'No active deliveries' : 'No completed deliveries yet'}
+            />
+          ) : (
+            <ListShell>
+              {visibleDeliveries.map((d) => (
+                <ListRow key={d.uuid}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{d.order?.order_number}</p>
+                        <StatusBadge status={d.status} />
+                      </div>
+                      {d.order?.shipping_address && (
+                        <p className="mt-1 flex items-start gap-2 text-sm text-muted-foreground">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                          {d.order.shipping_address.address_line_1}, {d.order.shipping_address.city}
+                        </p>
+                      )}
+                      <div className="mt-2.5">
+                        <DeliverySteps status={d.status} />
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        {d.status === 'assigned' && (
+                          <Button size="sm" onClick={() => pickup(d.uuid)}>
+                            Mark picked up
+                          </Button>
+                        )}
+                        {d.status === 'picked_up' && (
+                          <Button size="sm" onClick={() => complete(d.uuid)}>
+                            Mark delivered
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="font-semibold">{formatCurrency(d.earnings)}</p>
+                  </div>
+                </ListRow>
+              ))}
+            </ListShell>
+          )}
+        </DashboardCardContent>
+      </DashboardCard>
     </>
   );
 }

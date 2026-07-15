@@ -1,14 +1,15 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Mail } from 'lucide-react';
-import type { UserRole } from '@nileshop/types';
 import nileshopWordmark from '@/assets/logo/nileshop-wordmark.png';
 import { Button } from '@/components/ui/button';
 import { AuthField } from '@/features/auth/components/AuthField';
+import { SocialAuthButtons } from '@/features/auth/components/SocialAuthButtons';
 import { authApi } from '@/features/auth/api/authApi';
+import { dashboardPathForRoles } from '@/features/auth/utils/dashboardPath';
 import { setCredentials } from '@/store/authSlice';
 import { useAppDispatch } from '@/store/hooks';
 
@@ -19,17 +20,12 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-function dashboardPathForRoles(roles: UserRole[]) {
-  if (roles.includes('administrator')) return '/admin';
-  if (roles.includes('vendor')) return '/vendor';
-  if (roles.includes('delivery_rider')) return '/rider';
-  return '/';
-}
-
 export function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const socialAuthFailed = searchParams.get('error') === 'social_auth_failed';
   const explicitRedirect = (location.state as { from?: { pathname?: string } })?.from?.pathname;
   const {
     register,
@@ -56,73 +52,58 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen">
-      <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-dark lg:flex lg:flex-col lg:justify-end lg:p-12">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/5" />
-        <div className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-accent/10" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-6 sm:p-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-sm"
+      >
+        <Link to="/" className="mb-8 inline-block">
+          <img src={nileshopWordmark} alt="NileShop" className="h-7 w-auto" />
+        </Link>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative max-w-sm"
-        >
-          <h1 className="font-display text-3xl font-bold leading-tight text-primary-foreground">
-            Shop smarter across South Sudan
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-primary-foreground/70">
-            Thousands of products from trusted vendors, delivered fast to Juba and beyond.
+        <h2 className="font-display text-2xl font-bold text-foreground">Welcome back</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Sign in to your NileShop account</p>
+
+        {socialAuthFailed && (
+          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            That sign-in didn&apos;t go through. Please try again.
           </p>
-        </motion.div>
+        )}
 
-        <p className="relative text-xs text-primary-foreground/50">© {new Date().getFullYear()} NileShop</p>
-      </div>
+        <SocialAuthButtons className="mt-6" />
 
-      <div className="flex flex-1 items-center justify-center bg-background p-6 sm:p-10">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
-        >
-          <Link to="/" className="mb-8 inline-block">
-            <img src={nileshopWordmark} alt="NileShop" className="h-7 w-auto" />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <AuthField
+            id="email"
+            type="email"
+            icon={Mail}
+            label="Email address"
+            error={errors.email?.message}
+            {...register('email')}
+          />
+          <AuthField
+            id="password"
+            type="password"
+            icon={Lock}
+            label="Password"
+            error={errors.password?.message}
+            {...register('password')}
+          />
+
+          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <Link to="/auth/register" className="font-semibold text-primary hover:underline">
+            Create account
           </Link>
-
-          <h2 className="font-display text-2xl font-bold text-foreground">Welcome back</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your NileShop account</p>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
-            <AuthField
-              id="email"
-              type="email"
-              icon={Mail}
-              label="Email address"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <AuthField
-              id="password"
-              type="password"
-              icon={Lock}
-              label="Password"
-              error={errors.password?.message}
-              {...register('password')}
-            />
-
-            <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link to="/auth/register" className="font-semibold text-primary hover:underline">
-              Create account
-            </Link>
-          </p>
-        </motion.div>
-      </div>
+        </p>
+      </motion.div>
     </div>
   );
 }

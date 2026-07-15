@@ -2,16 +2,19 @@
 
 namespace App\Features\Auth\Services;
 
+use App\Enums\SocialProvider;
 use App\Enums\UserRole;
 use App\Features\Auth\DTOs\LoginDTO;
 use App\Features\Auth\DTOs\RegisterUserDTO;
 use App\Features\Auth\Repositories\Contracts\UserRepositoryInterface;
 use App\Features\Vendor\Services\VendorService;
+use App\Models\OauthProvider;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class AuthService
 {
@@ -81,6 +84,61 @@ class AuthService
         }
 
         return $this->createTokenResponse($user, $deviceName ?? 'web');
+    }
+
+    public function loginOrRegisterSocialUser(
+        SocialProvider $provider,
+        SocialiteUser $socialUser,
+        string $deviceName = 'web',
+    ): array {
+        $providerId = (string) $socialUser->getId();
+
+        $link = OauthProvider::where('provider', $provider)
+            ->where('provider_id', $providerId)
+            ->first();
+
+        if ($link !== null) {
+            $user = $link->user;
+        } else {
+            $email = $socialUser->getEmail();
+            $user = $email !== null ? $this->userRepository->findByEmail($email) : null;
+
+            if ($user === null) {
+                $user = $this->userRepository->create([
+                    'name' => $socialUser->getName() ?: ($socialUser->getNickname() ?: 'NileShop User'),
+                    'email' => $email ?? "{$provider->value}-{$providerId}@social.nileshop.ss",
+                    'password' => null,
+                    'avatar' => $socialUser->getAvatar(),
+                    'locale' => 'en',
+                    'currency' => 'SSP',
+                    'email_verified_at' => $email !== null ? now() : null,
+                ]);
+
+                $user->assignRole(UserRole::Customer->value);
+
+                event(new Registered($user));
+            } elseif ($user->email_verified_at === null && $email !== null) {
+                $this->userRepository->update($user, ['email_verified_at' => now()]);
+            }
+
+            OauthProvider::create([
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'provider_id' => $providerId,
+                'provider_email' => $email,
+                'avatar' => $socialUser->getAvatar(),
+            ]);
+        }
+
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been deactivated. Please contact support.'],
+            ]);
+        }
+
+        $this->activityLogService->log($user, 'user.social_login', $user);
+
+        return $this->createTokenResponse($user, $deviceName);
     }
 
     public function logout(User $user): void
