@@ -55,6 +55,7 @@ export function AppTopbar({ title, user, onMenuClick }: AppTopbarProps) {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <ThemeToggle />
         <NotificationBell />
 
         <DropdownMenu>
