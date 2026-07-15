@@ -25,7 +25,7 @@ export function TopProductsDonut({ data }: TopProductsDonutProps) {
 
   return (
     <div>
-      <div className="relative mx-auto h-48 w-48">
+      <div className="relative mx-auto h-36 w-36">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -48,17 +48,17 @@ export function TopProductsDonut({ data }: TopProductsDonutProps) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-xs text-muted-foreground">Total sales</p>
-          <p className="text-lg font-bold text-foreground">{formatCurrency(total)}</p>
+          <p className="text-[10px] text-muted-foreground">Total sales</p>
+          <p className="text-sm font-bold text-foreground">{formatCurrency(total)}</p>
         </div>
       </div>
 
-      <ul className="mt-5 space-y-3">
+      <ul className="mt-3 space-y-1.5">
         {top.map((p, i) => (
-          <li key={p.name} className="flex items-center justify-between gap-3 text-sm">
+          <li key={p.name} className="flex items-center justify-between gap-3 text-xs">
             <span className="flex min-w-0 items-center gap-2">
               <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className="h-2 w-2 shrink-0 rounded-full"
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
               <span className="truncate text-foreground">{p.name}</span>

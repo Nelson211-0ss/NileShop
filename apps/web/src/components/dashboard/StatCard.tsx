@@ -9,6 +9,7 @@ interface StatCardTrend {
 }
 
 type StatCardTone = 'primary' | 'accent' | 'plain';
+type StatCardSize = 'default' | 'sm';
 
 interface StatCardProps {
   label: string;
@@ -17,30 +18,52 @@ interface StatCardProps {
   hint?: string;
   trend?: StatCardTrend;
   tone?: StatCardTone;
+  size?: StatCardSize;
   className?: string;
 }
 
-const TONE_STYLES: Record<StatCardTone, { card: string; badge: string }> = {
-  primary: { card: 'bg-secondary/70', badge: 'bg-primary text-primary-foreground' },
-  accent: { card: 'bg-accent/10', badge: 'bg-accent text-white' },
-  plain: { card: 'bg-card', badge: 'bg-secondary text-primary' },
+const TONE_STYLES: Record<StatCardTone, { badge: string }> = {
+  primary: { badge: 'bg-primary text-primary-foreground' },
+  accent: { badge: 'bg-accent text-white' },
+  plain: { badge: 'bg-secondary text-primary' },
 };
 
-export function StatCard({ label, value, icon: Icon, hint, trend, tone = 'plain', className }: StatCardProps) {
+const SIZE_STYLES: Record<StatCardSize, { pad: string; iconWrap: string; icon: string; value: string }> = {
+  default: { pad: 'p-3', iconWrap: 'h-7 w-7', icon: 'h-3.5 w-3.5', value: 'text-xl' },
+  sm: { pad: 'p-2.5', iconWrap: 'h-6 w-6', icon: 'h-3 w-3', value: 'text-base' },
+};
+
+export function StatCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+  trend,
+  tone = 'plain',
+  size = 'default',
+  className,
+}: StatCardProps) {
   const isPositive = (trend?.value ?? 0) >= 0;
   const isGood = trend ? (trend.positiveIsGood ?? true) === isPositive : true;
   const styles = TONE_STYLES[tone];
+  const sizing = SIZE_STYLES[size];
 
   return (
-    <div className={cn('border border-border p-3.5 transition-colors hover:border-foreground/15', styles.card, className)}>
+    <div
+      className={cn(
+        'rounded-sm bg-card shadow-sm transition-shadow hover:shadow-md',
+        sizing.pad,
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md', styles.badge)}>
-          <Icon className="h-3.5 w-3.5" />
+        <span className={cn('flex shrink-0 items-center justify-center rounded-md', sizing.iconWrap, styles.badge)}>
+          <Icon className={sizing.icon} />
         </span>
       </div>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-2">
-        <p className="text-xl font-bold tracking-tight text-foreground">{value}</p>
+        <p className={cn('font-bold tracking-tight text-foreground', sizing.value)}>{value}</p>
         {trend && (
           <span
             className={cn(
@@ -59,5 +82,5 @@ export function StatCard({ label, value, icon: Icon, hint, trend, tone = 'plain'
 }
 
 export function StatGrid({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4', className)}>{children}</div>;
+  return <div className={cn('mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4', className)}>{children}</div>;
 }

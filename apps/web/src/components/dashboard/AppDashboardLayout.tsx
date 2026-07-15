@@ -25,7 +25,7 @@ export function AppDashboardLayout({ title, nav, footerNav }: AppDashboardLayout
       <AppSidebar nav={nav} footerNav={footerNav} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopbar title={title} user={user} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

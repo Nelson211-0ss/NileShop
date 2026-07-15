@@ -23,6 +23,16 @@
   --radius-sm: 0.375rem;
 }
 
+.dark {
+  --color-secondary: oklch(0.23 0.03 250);
+  --color-background: oklch(0.15 0.015 250);
+  --color-foreground: oklch(0.95 0.01 250);
+  --color-muted: oklch(0.25 0.02 250);
+  --color-muted-foreground: oklch(0.64 0.02 250);
+  --color-border: oklch(0.3 0.02 250);
+  --color-card: oklch(0.19 0.02 250);
+}
+
 @layer base {
   * {
     @apply border-border;

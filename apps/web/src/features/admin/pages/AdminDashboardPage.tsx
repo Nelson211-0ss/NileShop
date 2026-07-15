@@ -1,11 +1,14 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Clock, Package, ShoppingBag, Store, Truck, Users, Wallet } from 'lucide-react';
+import { Package, ShoppingBag, Store, Truck, Wallet } from 'lucide-react';
 import { adminApi } from '@/lib/marketplaceApi';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { CardMenu } from '@/components/dashboard/CardMenu';
 import { DashboardCard, DashboardCardContent, DashboardCardHeader } from '@/components/dashboard/DashboardCard';
+import { DummyDataBadge } from '@/components/dashboard/DummyDataBadge';
+import { dummySalesTrend, dummyTopProducts } from '@/components/dashboard/dummyChartData';
 import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -30,61 +33,81 @@ export function AdminDashboardPage() {
   });
 
   const s = data?.data;
-  const topProducts = report?.data?.top_products ?? [];
+  const realDailySales = report?.data?.daily_sales ?? [];
+  const realTopProducts = report?.data?.top_products ?? [];
+  const dailySalesIsDummy = realDailySales.length === 0;
+  const topProductsIsDummy = realTopProducts.length === 0;
+  const dailySales = useMemo(() => (dailySalesIsDummy ? dummySalesTrend() : realDailySales), [dailySalesIsDummy, realDailySales]);
+  const topProducts = useMemo(() => (topProductsIsDummy ? dummyTopProducts() : realTopProducts), [topProductsIsDummy, realTopProducts]);
 
   return (
     <>
       <PageHeader title="Overview" description="Monitor platform activity, vendors, and deliveries." />
 
       {s && (
-        <StatGrid>
+        <StatGrid className="sm:grid-cols-3 lg:grid-cols-5">
           <StatCard
             label="Revenue today"
             value={formatCurrency(s.revenue_today)}
             hint={`${formatCurrency(s.revenue_month)} this month`}
             icon={Wallet}
             tone="accent"
+            size="sm"
           />
-          <StatCard label="Total orders" value={s.total_orders} icon={ShoppingBag} tone="primary" hint={`${s.pending_orders} pending`} />
-          <StatCard label="Total users" value={s.total_users} icon={Users} tone="primary" />
-          <StatCard label="Active deliveries" value={s.active_deliveries} icon={Truck} tone="primary" />
+          <StatCard
+            label="Total orders"
+            value={s.total_orders}
+            icon={ShoppingBag}
+            tone="primary"
+            hint={`${s.pending_orders} pending`}
+            size="sm"
+          />
+          <StatCard
+            label="Vendors"
+            value={s.total_vendors}
+            icon={Store}
+            tone="primary"
+            hint={`${s.pending_vendors} pending`}
+            size="sm"
+          />
+          <StatCard label="Products" value={s.total_products} icon={Package} tone="primary" size="sm" />
+          <StatCard label="Active deliveries" value={s.active_deliveries} icon={Truck} tone="primary" size="sm" />
         </StatGrid>
       )}
 
-      <div className="mb-5 grid gap-4 lg:grid-cols-3">
+      <div className="mb-4 grid gap-3 lg:grid-cols-3">
         <DashboardCard className="lg:col-span-2">
           <DashboardCardHeader
             title="Revenue Analytics — last 14 days"
-            action={<CardMenu queryKey={['admin-reports', 14]} />}
+            action={
+              <div className="flex items-center gap-2">
+                {dailySalesIsDummy && <DummyDataBadge />}
+                <CardMenu queryKey={['admin-reports', 14]} />
+              </div>
+            }
           />
           <DashboardCardContent>
-            {report?.data?.daily_sales?.length ? (
-              <RevenueChart data={report.data.daily_sales} />
-            ) : (
-              <EmptyState icon={Package} title="No revenue data yet" />
-            )}
+            <RevenueChart data={dailySales} />
           </DashboardCardContent>
         </DashboardCard>
 
         <DashboardCard>
-          <DashboardCardHeader title="Top Products" action={<CardMenu queryKey={['admin-reports', 14]} />} />
+          <DashboardCardHeader
+            title="Top Products"
+            action={
+              <div className="flex items-center gap-2">
+                {topProductsIsDummy && <DummyDataBadge />}
+                <CardMenu queryKey={['admin-reports', 14]} />
+              </div>
+            }
+          />
           <DashboardCardContent>
             <TopProductsDonut data={topProducts} />
           </DashboardCardContent>
         </DashboardCard>
       </div>
 
-      {s && (
-        <StatGrid className="sm:grid-cols-3 lg:grid-cols-5">
-          <StatCard label="Vendors" value={s.total_vendors} icon={Store} />
-          <StatCard label="Pending vendors" value={s.pending_vendors} icon={Clock} />
-          <StatCard label="Products" value={s.total_products} icon={Package} />
-          <StatCard label="Published products" value={s.published_products} icon={CheckCircle2} />
-          <StatCard label="Pending orders" value={s.pending_orders} icon={ShoppingBag} />
-        </StatGrid>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <DashboardCard>
           <DashboardCardHeader
             title="Pending vendor approvals"

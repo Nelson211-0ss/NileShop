@@ -7,7 +7,7 @@ interface RevenueChartProps {
   height?: number;
 }
 
-export function RevenueChart({ data, height = 260 }: RevenueChartProps) {
+export function RevenueChart({ data, height = 200 }: RevenueChartProps) {
   const points = data.map((d) => ({
     ...d,
     label: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),

@@ -7,6 +7,8 @@ import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { CardMenu } from '@/components/dashboard/CardMenu';
 import { DashboardCard, DashboardCardContent, DashboardCardHeader } from '@/components/dashboard/DashboardCard';
+import { DummyDataBadge } from '@/components/dashboard/DummyDataBadge';
+import { dummySalesTrend } from '@/components/dashboard/dummyChartData';
 import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -37,7 +39,7 @@ export function VendorDashboardPage() {
     .filter((o) => o.payment_status === 'paid')
     .reduce((sum, o) => sum + o.total, 0);
 
-  const revenueTrend = useMemo(() => {
+  const realRevenueTrend = useMemo(() => {
     const byDate = new Map<string, { revenue: number; orders: number }>();
     orderList
       .filter((o) => o.payment_status === 'paid')
@@ -53,6 +55,11 @@ export function VendorDashboardPage() {
       .map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [orderList]);
+  const revenueTrendIsDummy = realRevenueTrend.length === 0;
+  const revenueTrend = useMemo(
+    () => (revenueTrendIsDummy ? dummySalesTrend() : realRevenueTrend),
+    [revenueTrendIsDummy, realRevenueTrend],
+  );
 
   return (
     <>
@@ -86,25 +93,37 @@ export function VendorDashboardPage() {
         }
       />
 
-      <StatGrid>
-        <StatCard label="Revenue" value={formatCurrency(revenue)} icon={Wallet} hint="From paid orders" tone="accent" />
-        <StatCard label="Products" value={productList.length} icon={Package} tone="primary" />
-        <StatCard label="Orders" value={orderList.length} icon={ShoppingBag} tone="primary" />
-        <StatCard label="Store status" value={store?.data?.status ?? '—'} icon={Store} tone="primary" />
+      <StatGrid className="sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard
+          label="Revenue"
+          value={formatCurrency(revenue)}
+          icon={Wallet}
+          hint="From paid orders"
+          tone="accent"
+          size="sm"
+        />
+        <StatCard label="Products" value={productList.length} icon={Package} tone="primary" size="sm" />
+        <StatCard label="Orders" value={orderList.length} icon={ShoppingBag} tone="primary" size="sm" />
+        <StatCard label="Unread messages" value={unreadMessages} icon={MessageCircle} tone="primary" size="sm" />
+        <StatCard label="Store status" value={store?.data?.status ?? '—'} icon={Store} tone="primary" size="sm" />
       </StatGrid>
 
-      <DashboardCard className="mb-5">
-        <DashboardCardHeader title="Revenue from your orders" action={<CardMenu queryKey={['vendor-orders']} />} />
+      <DashboardCard className="mb-4">
+        <DashboardCardHeader
+          title="Revenue from your orders"
+          action={
+            <div className="flex items-center gap-2">
+              {revenueTrendIsDummy && <DummyDataBadge />}
+              <CardMenu queryKey={['vendor-orders']} />
+            </div>
+          }
+        />
         <DashboardCardContent>
-          {revenueTrend.length > 0 ? (
-            <RevenueChart data={revenueTrend} />
-          ) : (
-            <EmptyState icon={Wallet} title="No paid orders yet" />
-          )}
+          <RevenueChart data={revenueTrend} />
         </DashboardCardContent>
       </DashboardCard>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <DashboardCard>
           <DashboardCardHeader
             title="Customer messages"

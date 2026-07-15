@@ -5,6 +5,7 @@ import { authApi } from '@/features/auth/api/authApi';
 import { logout } from '@/store/authSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { NotificationBell } from '@/components/dashboard/NotificationBell';
+import { ThemeToggle } from '@/components/dashboard/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,

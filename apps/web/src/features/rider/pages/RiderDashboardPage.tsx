@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, CheckCircle2, MapPin, Truck, Wallet } from 'lucide-react';
+import { Check, CheckCircle2, MapPin, TrendingUp, Truck, Wallet } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@nileshop/types';
 import { Button } from '@/components/ui/button';
 import { CardMenu } from '@/components/dashboard/CardMenu';
 import { DashboardCard, DashboardCardContent, DashboardCardHeader } from '@/components/dashboard/DashboardCard';
 import { cn } from '@/lib/utils';
+import { DummyDataBadge } from '@/components/dashboard/DummyDataBadge';
+import { dummySalesTrend } from '@/components/dashboard/dummyChartData';
 import { EmptyState, ListRow, ListShell } from '@/components/dashboard/EmptyState';
 import { PageHeader } from '@/components/dashboard/PageHeader';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -111,7 +113,7 @@ export function RiderDashboardPage() {
   const completedDeliveries = allDeliveries.filter((d) => d.status === 'delivered');
   const visibleDeliveries = tab === 'active' ? activeDeliveries : completedDeliveries;
 
-  const earningsTrend = useMemo(() => {
+  const realEarningsTrend = useMemo(() => {
     const byDate = new Map<string, { revenue: number; orders: number }>();
     completedDeliveries
       .filter((d) => d.delivered_at)
@@ -127,6 +129,15 @@ export function RiderDashboardPage() {
       .map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [completedDeliveries]);
+  const earningsTrendIsDummy = realEarningsTrend.length === 0;
+  const earningsTrend = useMemo(
+    () => (earningsTrendIsDummy ? dummySalesTrend() : realEarningsTrend),
+    [earningsTrendIsDummy, realEarningsTrend],
+  );
+  const avgPerDelivery =
+    earnings?.data && earnings.data.completed_deliveries > 0
+      ? earnings.data.total_earnings / earnings.data.completed_deliveries
+      : 0;
 
   return (
     <>
@@ -136,36 +147,51 @@ export function RiderDashboardPage() {
       />
 
       {earnings?.data && (
-        <StatGrid>
-          <StatCard label="Today" value={formatCurrency(earnings.data.today_earnings)} icon={Wallet} tone="accent" />
+        <StatGrid className="sm:grid-cols-3 lg:grid-cols-5">
+          <StatCard
+            label="Today"
+            value={formatCurrency(earnings.data.today_earnings)}
+            icon={Wallet}
+            tone="accent"
+            size="sm"
+          />
           <StatCard
             label="Total earnings"
             value={formatCurrency(earnings.data.total_earnings)}
             icon={Wallet}
             tone="primary"
+            size="sm"
           />
-          <StatCard label="Completed" value={earnings.data.completed_deliveries} icon={CheckCircle2} tone="primary" />
-          <StatCard label="Active" value={activeDeliveries.length} icon={Truck} tone="primary" />
+          <StatCard
+            label="Completed"
+            value={earnings.data.completed_deliveries}
+            icon={CheckCircle2}
+            tone="primary"
+            size="sm"
+          />
+          <StatCard label="Active" value={activeDeliveries.length} icon={Truck} tone="primary" size="sm" />
+          <StatCard label="Avg per delivery" value={formatCurrency(avgPerDelivery)} icon={TrendingUp} tone="primary" size="sm" />
         </StatGrid>
       )}
 
-      <DashboardCard className="mb-5">
+      <DashboardCard className="mb-4">
         <DashboardCardHeader
           title="Earnings from completed deliveries"
-          action={<CardMenu queryKey={['rider-deliveries']} />}
+          action={
+            <div className="flex items-center gap-2">
+              {earningsTrendIsDummy && <DummyDataBadge />}
+              <CardMenu queryKey={['rider-deliveries']} />
+            </div>
+          }
         />
         <DashboardCardContent>
-          {earningsTrend.length > 0 ? (
-            <RevenueChart data={earningsTrend} />
-          ) : (
-            <EmptyState icon={Wallet} title="No completed deliveries yet" />
-          )}
+          <RevenueChart data={earningsTrend} />
         </DashboardCardContent>
       </DashboardCard>
 
       <DashboardCard>
         <DashboardCardContent className="pt-4">
-          <div className="mb-5 flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
+          <div className="mb-4 flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
             {(['active', 'completed'] as const).map((t) => (
               <button
                 key={t}
