@@ -11,6 +11,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import nileshopIcon from '@/assets/logo/nileshop-icon.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -128,8 +129,8 @@ function AppDownloadBlock() {
     <div className="shrink-0 lg:w-72">
       <h3 className="text-xs font-bold tracking-wide text-primary-foreground uppercase">Download NileShop app</h3>
       <div className="mt-3 flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-foreground/10 text-lg font-bold text-primary-foreground">
-          N
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-foreground/10 p-2">
+          <img src={nileshopIcon} alt="" className="h-full w-full object-contain" />
         </div>
         <p className="text-sm leading-snug text-primary-foreground/70">
           Get access to exclusive offers and track orders on the go.
@@ -170,9 +171,7 @@ export function Footer() {
       <div className="border-b border-primary-foreground/15 bg-primary text-primary-foreground">
         <div className="page-container flex flex-col gap-8 py-10 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
           <Link to="/" className="flex shrink-0 items-center gap-2">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15 text-lg font-bold text-primary-foreground">
-              N
-            </span>
+            <img src={nileshopIcon} alt="" className="h-10 w-auto" />
             <span className="font-display text-2xl font-bold text-primary-foreground">NileShop</span>
           </Link>
           <NewsletterBlock />

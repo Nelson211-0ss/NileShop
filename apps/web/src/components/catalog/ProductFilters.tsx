@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { Check, ChevronDown, LayoutGrid, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { catalogApi } from '@/lib/marketplaceApi';
+import { resolveCategoryIcon } from '@/lib/categoryIcon';
 import {
   buildProductFilterParams,
   countActiveFilters,
@@ -26,6 +28,98 @@ const SORT_OPTIONS = [
 interface ProductFiltersProps {
   className?: string;
   onClose?: () => void;
+}
+
+function FilterSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-b border-border py-4 last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        <ChevronDown
+          className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', open && 'rotate-180')}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="pt-3">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CategoryRow({
+  active,
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  icon: typeof LayoutGrid;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
+        active ? 'bg-accent/10 font-semibold text-accent' : 'text-foreground hover:bg-muted',
+      )}
+    >
+      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} strokeWidth={1.9} />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {active && <Check className="h-3.5 w-3.5 shrink-0 text-accent" />}
+    </button>
+  );
+}
+
+function FeaturedToggle({ checked, onChange }: { checked: boolean; onChange: (next: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
+        checked ? 'bg-accent' : 'bg-muted',
+      )}
+    >
+      <motion.span
+        layout
+        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+        className={cn(
+          'inline-block h-4.5 w-4.5 rounded-full bg-white shadow',
+          checked ? 'translate-x-6' : 'translate-x-1',
+        )}
+      />
+    </button>
+  );
 }
 
 function FilterPanel({ className, onClose }: ProductFiltersProps) {
@@ -62,9 +156,12 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
   };
 
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Filters</h2>
+    <div className={cn('divide-y-0', className)}>
+      <div className="flex items-center justify-between pb-3">
+        <span className="flex items-center gap-2 font-semibold">
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+          Filters
+        </span>
         {countActiveFilters(filters) > 0 && (
           <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={clearFilters}>
             Clear all
@@ -72,8 +169,7 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="sort">Sort by</Label>
+      <FilterSection title="Sort by">
         <select
           id="sort"
           value={sortValue}
@@ -81,7 +177,7 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
             const [sort, direction] = e.target.value.split(':');
             updateFilter({ sort, direction });
           }}
-          className="flex h-11 w-full rounded-lg border border-border bg-card px-3 text-sm"
+          className="flex h-11 w-full rounded-lg border border-border bg-card px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -89,32 +185,34 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
             </option>
           ))}
         </select>
-      </div>
+      </FilterSection>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <select
-          id="category"
-          value={filters.category_id ?? ''}
-          onChange={(e) => updateFilter({ category_id: e.target.value || undefined })}
-          className="flex h-11 w-full rounded-lg border border-border bg-card px-3 text-sm"
-        >
-          <option value="">All categories</option>
+      <FilterSection title="Category">
+        <div className="max-h-72 space-y-0.5 overflow-y-auto">
+          <CategoryRow
+            active={!filters.category_id}
+            label="All categories"
+            icon={LayoutGrid}
+            onClick={() => updateFilter({ category_id: undefined })}
+          />
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
+            <CategoryRow
+              key={cat.id}
+              active={filters.category_id === String(cat.id)}
+              label={cat.name}
+              icon={resolveCategoryIcon(cat.icon)}
+              onClick={() => updateFilter({ category_id: String(cat.id) })}
+            />
           ))}
-        </select>
-      </div>
+        </div>
+      </FilterSection>
 
-      <div className="space-y-2">
-        <Label htmlFor="brand">Brand</Label>
+      <FilterSection title="Brand" defaultOpen={false}>
         <select
           id="brand"
           value={filters.brand_id ?? ''}
           onChange={(e) => updateFilter({ brand_id: e.target.value || undefined })}
-          className="flex h-11 w-full rounded-lg border border-border bg-card px-3 text-sm"
+          className="flex h-11 w-full rounded-lg border border-border bg-card px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           <option value="">All brands</option>
           {brands.map((brand) => (
@@ -123,37 +221,48 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
             </option>
           ))}
         </select>
-      </div>
+      </FilterSection>
 
-      <div className="space-y-2">
-        <Label>Price range (SSP)</Label>
+      <FilterSection title="Price range (SSP)">
         <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            min={0}
-            placeholder="Min"
-            value={filters.min_price ?? ''}
-            onChange={(e) => updateFilter({ min_price: e.target.value || undefined })}
-          />
-          <Input
-            type="number"
-            min={0}
-            placeholder="Max"
-            value={filters.max_price ?? ''}
-            onChange={(e) => updateFilter({ max_price: e.target.value || undefined })}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+              SSP
+            </span>
+            <Input
+              type="number"
+              min={0}
+              placeholder="Min"
+              value={filters.min_price ?? ''}
+              onChange={(e) => updateFilter({ min_price: e.target.value || undefined })}
+              className="pl-10"
+            />
+          </div>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+              SSP
+            </span>
+            <Input
+              type="number"
+              min={0}
+              placeholder="Max"
+              value={filters.max_price ?? ''}
+              onChange={(e) => updateFilter({ max_price: e.target.value || undefined })}
+              className="pl-10"
+            />
+          </div>
         </div>
-      </div>
+      </FilterSection>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center justify-between py-4">
+        <Label htmlFor="featured-toggle" className="cursor-pointer text-sm font-medium text-foreground">
+          Featured products only
+        </Label>
+        <FeaturedToggle
           checked={filters.is_featured === '1'}
-          onChange={(e) => updateFilter({ is_featured: e.target.checked ? '1' : undefined })}
-          className="rounded border-border"
+          onChange={(next) => updateFilter({ is_featured: next ? '1' : undefined })}
         />
-        Featured products only
-      </label>
+      </div>
 
       {onClose && (
         <Button type="button" className="w-full lg:hidden" onClick={onClose}>
@@ -166,8 +275,8 @@ function FilterPanel({ className, onClose }: ProductFiltersProps) {
 
 export function ProductFiltersSidebar() {
   return (
-    <aside className="hidden w-56 shrink-0 lg:block">
-      <div className="sticky top-24 rounded-xl border border-border bg-card p-4">
+    <aside className="hidden w-64 shrink-0 lg:block">
+      <div className="sticky top-24 rounded-xl border border-border bg-card p-4 shadow-sm">
         <FilterPanel />
       </div>
     </aside>
@@ -175,28 +284,39 @@ export function ProductFiltersSidebar() {
 }
 
 export function ProductFiltersMobile({ open, onClose }: { open: boolean; onClose: () => void }) {
-  if (!open) return null;
-
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Close filters"
-        className="fixed inset-0 z-40 bg-black/20 lg:hidden"
-        onClick={onClose}
-      />
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-card shadow-lg lg:hidden">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="font-semibold">Filters</span>
-          <Button type="button" variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <FilterPanel onClose={onClose} />
-        </div>
-      </div>
-    </>
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.button
+            type="button"
+            aria-label="Close filters"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/20 lg:hidden"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-card shadow-lg lg:hidden"
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="font-semibold">Filters</span>
+              <Button type="button" variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <FilterPanel onClose={onClose} />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 

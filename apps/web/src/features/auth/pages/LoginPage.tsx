@@ -3,10 +3,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Lock, Mail } from 'lucide-react';
+import type { UserRole } from '@nileshop/types';
+import nileshopWordmark from '@/assets/logo/nileshop-wordmark.png';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthField } from '@/features/auth/components/AuthField';
 import { authApi } from '@/features/auth/api/authApi';
 import { setCredentials } from '@/store/authSlice';
 import { useAppDispatch } from '@/store/hooks';
@@ -18,11 +19,18 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+function dashboardPathForRoles(roles: UserRole[]) {
+  if (roles.includes('administrator')) return '/admin';
+  if (roles.includes('vendor')) return '/vendor';
+  if (roles.includes('delivery_rider')) return '/rider';
+  return '/';
+}
+
 export function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = (location.state as { from?: { pathname?: string } })?.from?.pathname ?? '/';
+  const explicitRedirect = (location.state as { from?: { pathname?: string } })?.from?.pathname;
   const {
     register,
     handleSubmit,
@@ -35,7 +43,8 @@ export function LoginPage() {
       const response = await authApi.login(values);
       if (response.success && response.data) {
         dispatch(setCredentials({ user: response.data.user, token: response.data.token }));
-        navigate(redirectTo, { replace: true });
+        const target = explicitRedirect ?? dashboardPathForRoles(response.data.user.roles);
+        navigate(target, { replace: true });
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { errors?: Record<string, string[]> } } };
@@ -47,48 +56,73 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-accent/10 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
-      >
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-              N
-            </div>
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>Sign in to your NileShop account</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
-                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
-              </Button>
-              <p className="text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link to="/auth/register" className="font-medium text-primary hover:underline">
-                  Create account
-                </Link>
-              </p>
-            </CardFooter>
+    <div className="relative flex min-h-screen">
+      <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-dark lg:flex lg:flex-col lg:justify-end lg:p-12">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-accent/10" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative max-w-sm"
+        >
+          <h1 className="font-display text-3xl font-bold leading-tight text-primary-foreground">
+            Shop smarter across South Sudan
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-primary-foreground/70">
+            Thousands of products from trusted vendors, delivered fast to Juba and beyond.
+          </p>
+        </motion.div>
+
+        <p className="relative text-xs text-primary-foreground/50">© {new Date().getFullYear()} NileShop</p>
+      </div>
+
+      <div className="flex flex-1 items-center justify-center bg-background p-6 sm:p-10">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-sm"
+        >
+          <Link to="/" className="mb-8 inline-block">
+            <img src={nileshopWordmark} alt="NileShop" className="h-7 w-auto" />
+          </Link>
+
+          <h2 className="font-display text-2xl font-bold text-foreground">Welcome back</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in to your NileShop account</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">
+            <AuthField
+              id="email"
+              type="email"
+              icon={Mail}
+              label="Email address"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <AuthField
+              id="password"
+              type="password"
+              icon={Lock}
+              label="Password"
+              error={errors.password?.message}
+              {...register('password')}
+            />
+
+            <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
+            </Button>
           </form>
-        </Card>
-      </motion.div>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link to="/auth/register" className="font-semibold text-primary hover:underline">
+              Create account
+            </Link>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
