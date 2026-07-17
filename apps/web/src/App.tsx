@@ -43,6 +43,9 @@ import { NotificationsPage } from '@/features/notifications/pages/NotificationsP
 import { MessagesPage } from '@/features/messages/pages/MessagesPage';
 import { VendorMessagesPage } from '@/features/vendor/pages/VendorMessagesPage';
 import { RiderDashboardPage } from '@/features/rider/pages/RiderDashboardPage';
+import { AdvertisePage } from '@/features/info/pages/AdvertisePage';
+import { GuidePage } from '@/features/info/pages/GuidePage';
+import { HelpPage } from '@/features/info/pages/HelpPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -66,6 +69,9 @@ export function App() {
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/auth/vendor-register" element={<VendorRegisterPage />} />
                 <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/advertise" element={<AdvertisePage />} />
+                <Route path="/guide" element={<GuidePage />} />
+                <Route path="/help" element={<HelpPage />} />
 
                 <Route element={<ProtectedRoute><CustomerDashboardLayout /></ProtectedRoute>}>
                   <Route path="/account" element={<AccountPage />} />

@@ -18,6 +18,9 @@ const NAV_LINKS = [
   { to: '/products?is_featured=1', label: 'Featured Deals' },
   { to: '/products?sort=total_sales&direction=desc', label: 'Best Sellers' },
   { to: '/products?sort=created_at&direction=desc', label: 'New Arrivals' },
+  { to: '/guide', label: 'Guide' },
+  { to: '/help', label: 'Help' },
+  { to: '/advertise', label: 'Advertise' },
   { to: '/auth/vendor-register', label: 'Sell on NileShop' },
 ];
 
@@ -181,7 +184,7 @@ export function Header() {
 
       {/* Row 2 — categories & quick links */}
       <div className="hidden bg-primary md:block">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 sm:px-8 lg:gap-6 lg:px-10 xl:px-14">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 sm:px-8 lg:gap-5 lg:px-10 xl:px-14">
           <HeaderCategoryMenu />
           {NAV_LINKS.map((link) => (
             <NavPill key={link.label} to={link.to} label={link.label} />

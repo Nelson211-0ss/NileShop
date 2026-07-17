@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"backend:%{http_code}\\\\n\" http://127.0.0.1:8888/api/v1/catalog/categories)",
+      "Bash(curl -s -o /dev/null -w \"vite:%{http_code}\\\\n\" http://localhost:5173/)",
+      "Read(//c/Users/muwan/AppData/Local/Temp/claude/c--Users-muwan-Desktop-NileShop/41fc5b34-3b2d-4311-aa8e-bc3c9749123e/scratchpad/pw/**)",
+      "Bash(node debug-login.js)",
+      "Bash(taskkill //F //IM php.exe)",
+      "Bash(tasklist //FI \"IMAGENAME eq php.exe\")",
+      "Bash(/c/Users/muwan/bin/php84/php.exe artisan *)"
+    ]
+  }
+}
