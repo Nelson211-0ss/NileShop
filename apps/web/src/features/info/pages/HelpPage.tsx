@@ -12,8 +12,9 @@ interface FaqItem {
   answer: string;
 }
 
-const FAQ_SECTIONS: { title: string; items: FaqItem[] }[] = [
+const FAQ_SECTIONS: { id: string; title: string; items: FaqItem[] }[] = [
   {
+    id: 'orders-shipping',
     title: 'Orders & shipping',
     items: [
       {
@@ -34,6 +35,7 @@ const FAQ_SECTIONS: { title: string; items: FaqItem[] }[] = [
     ],
   },
   {
+    id: 'payments',
     title: 'Payments',
     items: [
       {
@@ -47,6 +49,7 @@ const FAQ_SECTIONS: { title: string; items: FaqItem[] }[] = [
     ],
   },
   {
+    id: 'returns-refunds',
     title: 'Returns & refunds',
     items: [
       {
@@ -61,6 +64,7 @@ const FAQ_SECTIONS: { title: string; items: FaqItem[] }[] = [
     ],
   },
   {
+    id: 'selling-on-nileshop',
     title: 'Selling on NileShop',
     items: [
       {
@@ -74,6 +78,7 @@ const FAQ_SECTIONS: { title: string; items: FaqItem[] }[] = [
     ],
   },
   {
+    id: 'account-security',
     title: 'Account & security',
     items: [
       {
@@ -179,7 +184,11 @@ export function HelpPage() {
         ) : (
           <div className="grid gap-6 lg:grid-cols-2">
             {filteredSections.map((section) => (
-              <div key={section.title} className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div
+                key={section.title}
+                id={section.id}
+                className="scroll-mt-32 rounded-xl border border-border bg-card p-5 shadow-sm"
+              >
                 <h2 className="font-display text-lg font-semibold">{section.title}</h2>
                 <div className="mt-2">
                   {section.items.map((item) => (
@@ -192,7 +201,7 @@ export function HelpPage() {
         )}
       </section>
 
-      <section className="bg-secondary/40 py-14">
+      <section id="contact" className="scroll-mt-32 bg-secondary/40 py-14">
         <div className="page-container">
           <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-border bg-card p-8 shadow-sm sm:flex-row sm:items-center">
             <div>

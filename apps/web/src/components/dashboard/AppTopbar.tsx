@@ -18,9 +18,11 @@ interface AppTopbarProps {
   title: string;
   user: AuthUser | null;
   onMenuClick: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-export function AppTopbar({ title, user, onMenuClick }: AppTopbarProps) {
+export function AppTopbar({ title, user, onMenuClick, theme, onToggleTheme }: AppTopbarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -55,7 +57,7 @@ export function AppTopbar({ title, user, onMenuClick }: AppTopbarProps) {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
-        <ThemeToggle />
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         <NotificationBell />
 
         <DropdownMenu>

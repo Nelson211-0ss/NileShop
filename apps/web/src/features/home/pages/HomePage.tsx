@@ -49,7 +49,13 @@ export function HomePage() {
 
       {/* Flash Sale */}
       {home?.flash_sale && (
-        <section className="bg-accent/10 py-10">
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="bg-accent/10 py-10"
+        >
           <div className="page-container">
             <div className="mb-6 flex items-center justify-between">
               <div>
@@ -68,11 +74,17 @@ export function HomePage() {
             </div>
             <ProductCarousel products={home.flash_sale.products} />
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* Featured */}
-      <section className="page-container py-12">
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="page-container py-12"
+      >
         <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold">
           <Star className="h-6 w-6 text-primary" /> Featured Products
         </h2>
@@ -81,13 +93,19 @@ export function HomePage() {
         ) : (
           <ProductCarousel products={home?.featured_products ?? []} />
         )}
-      </section>
+      </motion.section>
 
       {/* Best Sellers */}
-      <section className="page-container pb-12">
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="page-container pb-12"
+      >
         <h2 className="mb-6 text-2xl font-bold">Best Sellers</h2>
         <ProductCarousel products={home?.best_sellers ?? []} />
-      </section>
+      </motion.section>
     </div>
   );
 }

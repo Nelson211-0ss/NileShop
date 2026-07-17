@@ -1,25 +1,28 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'nileshop_theme';
+const STORAGE_KEY = 'nileshop_dashboard_theme';
 
 function getInitialTheme(): Theme {
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return stored === 'dark' ? 'dark' : 'light';
 }
 
+/**
+ * Dashboard-scoped theme toggle. The returned `theme` is meant to be applied as a
+ * `dark` class on the dashboard's own root element (see AppDashboardLayout) — not on
+ * <html> — so it never affects the storefront, which always renders in light mode.
+ */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
-
   const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+    setTheme((current) => {
+      const next = current === 'dark' ? 'light' : 'dark';
+      window.localStorage.setItem(STORAGE_KEY, next);
+      return next;
+    });
   }, []);
 
   return { theme, toggleTheme };

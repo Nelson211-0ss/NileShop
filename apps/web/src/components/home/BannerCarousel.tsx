@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Banner } from '@nileshop/types';
 import { cn } from '@/lib/utils';
@@ -47,11 +48,11 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
       >
         {banners.map((banner) => {
           const content = (
-            <div className="relative h-[160px] w-full sm:h-[220px] lg:h-[280px]">
+            <div className="relative h-[160px] w-full overflow-hidden sm:h-[220px] lg:h-[280px]">
               <img
                 src={banner.image}
                 alt={banner.title}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="animate-kenburns absolute inset-0 h-full w-full object-cover"
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
@@ -60,9 +61,14 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
               <div className="page-container absolute inset-0 flex items-end pb-8 sm:items-center sm:pb-0">
-                <h2 className="max-w-lg text-2xl font-bold text-white drop-shadow-sm sm:text-3xl lg:text-4xl">
+                <motion.h2
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
+                  className="max-w-lg text-2xl font-bold text-white drop-shadow-sm sm:text-3xl lg:text-4xl"
+                >
                   {banner.title}
-                </h2>
+                </motion.h2>
               </div>
             </div>
           );
@@ -97,7 +103,7 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
             type="button"
             aria-label="Previous banner"
             onClick={() => scrollToIndex(active - 1)}
-            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm transition-colors hover:bg-white"
+            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm transition-all hover:scale-110 hover:bg-white active:scale-95"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -105,7 +111,7 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
             type="button"
             aria-label="Next banner"
             onClick={() => scrollToIndex(active + 1)}
-            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm transition-colors hover:bg-white"
+            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm transition-all hover:scale-110 hover:bg-white active:scale-95"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

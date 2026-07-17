@@ -56,15 +56,15 @@ export function HeaderCategoryMenu() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl sm:w-80"
+            className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-sm border border-border bg-card text-foreground shadow-xl sm:w-72"
           >
-            <div className="bg-primary-dark px-5 py-4">
-              <p className="text-lg font-bold text-primary-foreground">Shop by Category</p>
+            <div className="bg-primary-dark px-4 py-2.5">
+              <p className="text-sm font-bold text-primary-foreground">Shop by Category</p>
             </div>
 
-            <ul className="max-h-80 overflow-y-auto py-1">
+            <ul className="max-h-72 overflow-y-auto py-0.5">
               {categories.length === 0 && (
-                <li className="px-5 py-3 text-sm text-muted-foreground">Loading categories…</li>
+                <li className="px-4 py-1.5 text-xs text-muted-foreground">Loading categories…</li>
               )}
               {categories.map((cat, i) => {
                 const Icon = resolveCategoryIcon(cat.icon);
@@ -78,13 +78,13 @@ export function HeaderCategoryMenu() {
                     <Link
                       to={`/products?category_id=${cat.id}`}
                       onClick={() => setOpen(false)}
-                      className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted"
+                      className="flex items-center justify-between gap-2 px-4 py-1.5 transition-colors hover:bg-muted"
                     >
-                      <span className="flex items-center gap-3">
-                        <Icon className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} />
-                        <span className="text-[15px] font-medium text-foreground">{cat.name}</span>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
+                        <span className="text-[13px] font-medium leading-tight text-foreground">{cat.name}</span>
                       </span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     </Link>
                   </motion.li>
                 );
@@ -93,31 +93,31 @@ export function HeaderCategoryMenu() {
 
             <div className="border-t border-border" />
 
-            <div className="px-5 pb-1 pt-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground/80">
+            <div className="px-4 pb-0.5 pt-2">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/80">
                 More from NileShop
               </p>
             </div>
-            <ul className="py-1">
+            <ul className="py-0.5">
               {QUICK_LINKS.map((link) => (
                 <li key={link.to}>
                   <Link
                     to={link.to}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted"
+                    className="flex items-center gap-2 px-4 py-1.5 transition-colors hover:bg-muted"
                   >
-                    <link.icon className="h-5 w-5 shrink-0 text-accent" strokeWidth={1.75} />
-                    <span className="text-[15px] font-medium text-foreground">{link.label}</span>
+                    <link.icon className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
+                    <span className="text-[13px] font-medium leading-tight text-foreground">{link.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <div className="border-t border-border p-2">
+            <div className="border-t border-border p-1.5">
               <Link
                 to="/products"
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2 text-center text-sm font-semibold text-primary transition-colors hover:bg-muted"
+                className="block rounded-sm px-3 py-1.5 text-center text-[13px] font-semibold text-primary transition-colors hover:bg-muted"
               >
                 Browse all products
               </Link>

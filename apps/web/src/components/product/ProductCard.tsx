@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, ShoppingCart, Star } from 'lucide-react';
 import type { Product } from '@nileshop/types';
 import { formatCurrency } from '@nileshop/utils';
 import { Button } from '@/components/ui/button';
 import { useCartActions } from '@/hooks/useCart';
 import { extractApiError } from '@/lib/apiErrors';
+
+const MotionLink = motion.create(Link);
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCartActions();
@@ -41,14 +44,21 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Link to={`/products/${product.slug}`} className="group block h-full">
-      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+    <MotionLink
+      to={`/products/${product.slug}`}
+      className="group block h-full"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2, margin: '0px 0px -40px 0px' }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+    >
+      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="relative aspect-square shrink-0 overflow-hidden bg-muted">
           {image ? (
             <img
               src={image.url}
               alt={product.name}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
@@ -65,19 +75,35 @@ export function ProductCard({ product }: { product: Product }) {
               -{discount}%
             </span>
           )}
-          {added && (
-            <span className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-medium text-white">
-              <CheckCircle2 className="h-3 w-3" /> Added
-            </span>
-          )}
-          {error && (
-            <span className="absolute inset-x-1.5 bottom-1.5 rounded-md bg-destructive px-2 py-1 text-[10px] text-white">
-              {error}
-            </span>
-          )}
+          <AnimatePresence>
+            {added && (
+              <motion.span
+                key="added"
+                initial={{ opacity: 0, scale: 0.7, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.7, y: 6 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-medium text-white"
+              >
+                <CheckCircle2 className="h-3 w-3" /> Added
+              </motion.span>
+            )}
+            {error && (
+              <motion.span
+                key="error"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-x-1.5 bottom-1.5 rounded-md bg-destructive px-2 py-1 text-[10px] text-white"
+              >
+                {error}
+              </motion.span>
+            )}
+          </AnimatePresence>
           <Button
             size="icon"
-            className="absolute bottom-1 right-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+            className="absolute bottom-1 right-1 h-6 w-6 translate-y-2 opacity-0 transition-all duration-300 ease-out active:scale-90 group-hover:translate-y-0 group-hover:opacity-100"
             disabled={adding || product.stock === 0}
             onClick={handleAddToCart}
           >
@@ -109,6 +135,6 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </div>
-    </Link>
+    </MotionLink>
   );
 }

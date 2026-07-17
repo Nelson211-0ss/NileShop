@@ -1,27 +1,67 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Heart, MapPin, Menu, ShoppingCart, X } from 'lucide-react';
 import nileshopIcon from '@/assets/logo/nileshop-icon.png';
+import { catalogApi } from '@/lib/marketplaceApi';
 import { useAppSelector } from '@/store/hooks';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { HeaderSearch } from '@/components/layout/HeaderSearch';
 import { HeaderMobileMenu } from '@/components/layout/HeaderMobileMenu';
 import { HeaderAccountMenu } from '@/components/layout/HeaderAccountMenu';
 import { HeaderCategoryMenu } from '@/components/layout/HeaderCategoryMenu';
+import { HeaderNavDropdown, type NavDropdownItem } from '@/components/layout/HeaderNavDropdown';
 import { cn } from '@/lib/utils';
 
 type MobilePanel = 'menu' | 'search' | null;
 
-const NAV_LINKS = [
-  { to: '/products', label: 'Shop' },
-  { to: '/products?is_featured=1', label: 'Featured Deals' },
-  { to: '/products?sort=total_sales&direction=desc', label: 'Best Sellers' },
-  { to: '/products?sort=created_at&direction=desc', label: 'New Arrivals' },
-  { to: '/guide', label: 'Guide' },
-  { to: '/help', label: 'Help' },
-  { to: '/advertise', label: 'Advertise' },
-  { to: '/auth/vendor-register', label: 'Sell on NileShop' },
+type DropdownKind = 'categories' | 'best-sellers' | 'new-arrivals' | 'deals' | 'help' | 'sell';
+
+type SubheaderItem =
+  | { type: 'link'; to: string; label: string }
+  | { type: 'dropdown'; to: string; label: string; kind: DropdownKind };
+
+const SUBHEADER_ITEMS: SubheaderItem[] = [
+  { type: 'dropdown', to: '/products', label: 'Shop', kind: 'categories' },
+  { type: 'dropdown', to: '/products?is_featured=1', label: 'Featured Deals', kind: 'deals' },
+  {
+    type: 'dropdown',
+    to: '/products?sort=total_sales&direction=desc',
+    label: 'Best Sellers',
+    kind: 'best-sellers',
+  },
+  {
+    type: 'dropdown',
+    to: '/products?sort=created_at&direction=desc',
+    label: 'New Arrivals',
+    kind: 'new-arrivals',
+  },
+  { type: 'link', to: '/guide', label: 'Guide' },
+  { type: 'dropdown', to: '/help', label: 'Help', kind: 'help' },
+  { type: 'link', to: '/advertise', label: 'Advertise' },
+  { type: 'dropdown', to: '/auth/vendor-register', label: 'Sell on NileShop', kind: 'sell' },
+];
+
+const DEALS_ITEMS: NavDropdownItem[] = [
+  { label: 'All featured deals', to: '/products?is_featured=1' },
+  { label: 'Top rated deals', to: '/products?is_featured=1&sort=rating&direction=desc' },
+  { label: 'Lowest price first', to: '/products?is_featured=1&sort=price&direction=asc' },
+];
+
+const HELP_ITEMS: NavDropdownItem[] = [
+  { label: 'Orders & shipping', to: '/help#orders-shipping' },
+  { label: 'Payments', to: '/help#payments' },
+  { label: 'Returns & refunds', to: '/help#returns-refunds' },
+  { label: 'Selling on NileShop', to: '/help#selling-on-nileshop' },
+  { label: 'Account & security', to: '/help#account-security' },
+  { label: 'Contact support', to: '/help#contact' },
+];
+
+const SELL_ITEMS: NavDropdownItem[] = [
+  { label: 'Become a vendor', to: '/auth/vendor-register' },
+  { label: 'How selling works', to: '/help#selling-on-nileshop' },
+  { label: 'Vendor dashboard', to: '/vendor' },
 ];
 
 function NavPill({ to, label }: { to: string; label: string }) {
@@ -42,6 +82,50 @@ export function Header() {
   const location = useLocation();
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
   const [scrolled, setScrolled] = useState(false);
+
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: catalogApi.categories,
+    staleTime: 5 * 60 * 1000,
+  });
+  const categories = useMemo(() => categoriesData?.data ?? [], [categoriesData]);
+
+  const categoryItems = useMemo<NavDropdownItem[]>(
+    () => categories.slice(0, 8).map((c) => ({ label: c.name, to: `/products?category_id=${c.id}` })),
+    [categories],
+  );
+  const bestSellerItems = useMemo<NavDropdownItem[]>(
+    () =>
+      categories
+        .slice(0, 8)
+        .map((c) => ({ label: c.name, to: `/products?category_id=${c.id}&sort=total_sales&direction=desc` })),
+    [categories],
+  );
+  const newArrivalItems = useMemo<NavDropdownItem[]>(
+    () =>
+      categories
+        .slice(0, 8)
+        .map((c) => ({ label: c.name, to: `/products?category_id=${c.id}&sort=created_at&direction=desc` })),
+    [categories],
+  );
+
+  const dropdownItems: Record<DropdownKind, NavDropdownItem[]> = {
+    categories: categoryItems,
+    'best-sellers': bestSellerItems,
+    'new-arrivals': newArrivalItems,
+    deals: DEALS_ITEMS,
+    help: HELP_ITEMS,
+    sell: SELL_ITEMS,
+  };
+
+  const dropdownLoading: Record<DropdownKind, boolean> = {
+    categories: categoriesLoading,
+    'best-sellers': categoriesLoading,
+    'new-arrivals': categoriesLoading,
+    deals: false,
+    help: false,
+    sell: false,
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6);
@@ -184,11 +268,22 @@ export function Header() {
 
       {/* Row 2 — categories & quick links */}
       <div className="hidden bg-primary md:block">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 sm:px-8 lg:gap-5 lg:px-10 xl:px-14">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-0.5 sm:px-8 lg:gap-x-5 lg:px-10 xl:px-14">
           <HeaderCategoryMenu />
-          {NAV_LINKS.map((link) => (
-            <NavPill key={link.label} to={link.to} label={link.label} />
-          ))}
+          {SUBHEADER_ITEMS.map((item) =>
+            item.type === 'dropdown' ? (
+              <HeaderNavDropdown
+                key={item.label}
+                to={item.to}
+                label={item.label}
+                items={dropdownItems[item.kind]}
+                loading={dropdownLoading[item.kind]}
+                viewAllLabel={item.kind === 'categories' ? 'View all categories' : undefined}
+              />
+            ) : (
+              <NavPill key={item.label} to={item.to} label={item.label} />
+            ),
+          )}
         </div>
       </div>
 
