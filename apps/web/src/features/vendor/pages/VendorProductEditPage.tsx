@@ -40,6 +40,7 @@ export function VendorProductEditPage() {
     <>
       <PageHeader title="Edit product" description={product.name} />
       <VendorProductForm
+        key={productId}
         initial={initial}
         initialImages={
           product.images?.map((img) => ({ path: img.path, url: img.url })) ?? []
